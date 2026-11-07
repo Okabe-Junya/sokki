@@ -64,12 +64,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let monitor = HotkeyMonitor(key: settings.hotkey)
     do {
       try monitor.start()
+    } catch HotkeyError.inputMonitoringDenied {
+      // The grant lands in System Settings without any notification; poll until it does.
+      render(.failed("grant Input Monitoring in System Settings"), live: "")
+      hotkeyTask = Task {
+        while !HotkeyMonitor.hasInputMonitoringAccess() {
+          try? await Task.sleep(for: .seconds(2))
+          if Task.isCancelled { return }
+        }
+        startHotkey(session)
+      }
+      return
     } catch {
       logger.error("hotkey start failed: \(error)")
       render(.failed("hotkey: \(error)"), live: "")
       return
     }
     hotkey = monitor
+    render(.idle, live: "")
     hotkeyTask = Task {
       for await event in monitor.events {
         await session.handle(event)
