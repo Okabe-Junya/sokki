@@ -24,6 +24,8 @@ actor AnalyzerSession {
       throw SpeechEngineError.localeUnsupported(requested)
     }
     await tearDown()
+    // The framework logs "modules with unallocated locales" unless the locale is reserved first.
+    _ = try await AssetInventory.reserve(locale: locale)
 
     let transcriber = SpeechTranscriber(
       locale: locale,
@@ -148,6 +150,10 @@ actor AnalyzerSession {
     await analyzer?.cancelAndFinishNow()
     analyzer = nil
     audioFormat = nil
+    if let locale, let reserved = await SpeechTranscriber.supportedLocale(equivalentTo: locale) {
+      await AssetInventory.release(reservedLocale: reserved)
+    }
+    locale = nil
   }
 }
 
