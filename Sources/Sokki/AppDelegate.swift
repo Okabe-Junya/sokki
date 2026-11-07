@@ -7,6 +7,9 @@ import os
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
+  private static let accessPollIntervalSeconds = 2
+  private static let liveTextMaxCharacters = 60
+
   private let settings = Settings()
   private let logger = Logger(subsystem: "dev.junya.sokki", category: "app")
   private var statusItem: NSStatusItem?
@@ -16,21 +19,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private var hotkey: HotkeyMonitor?
   private var hotkeyTask: Task<Void, Never>?
 
-  func applicationDidFinishLaunching(_ notification: Notification) {
+  private static func title(for key: HotkeyKey) -> String {
+    switch key {
+    case .rightOption: "Right Option (⌥)"
+    case .leftOption: "Left Option (⌥)"
+    case .rightCommand: "Right Command (⌘)"
+    case .fn: "fn / Globe"
+    }
+  }
+
+  func applicationDidFinishLaunching(_: Notification) {
     let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     item.button?.image = NSImage(systemSymbolName: "mic", accessibilityDescription: "Sokki")
     item.menu = buildMenu()
     statusItem = item
 
-    let session = DictationSession(
+    let dictation = DictationSession(
       engine: AppleSpeechEngine(),
       recorder: AudioRecorder(),
       inserter: TextInserter()
     ) { [weak self] state, live in
       Task { @MainActor in self?.render(state, live: live) }
     }
-    self.session = session
-    Task { await bootstrap(session) }
+    session = dictation
+    Task { await bootstrap(dictation) }
   }
 
   private func bootstrap(_ session: DictationSession) async {
@@ -69,7 +81,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       render(.failed("grant Input Monitoring in System Settings"), live: "")
       hotkeyTask = Task {
         while !HotkeyMonitor.hasInputMonitoringAccess() {
-          try? await Task.sleep(for: .seconds(2))
+          try? await Task.sleep(for: .seconds(Self.accessPollIntervalSeconds))
           if Task.isCancelled { return }
         }
         startHotkey(session)
@@ -163,7 +175,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     statusItem?.button?.image = NSImage(
       systemSymbolName: symbol, accessibilityDescription: stateItem.title)
     if state == .listening, !live.isEmpty {
-      liveItem.title = String(live.suffix(60))
+      liveItem.title = String(live.suffix(Self.liveTextMaxCharacters))
       liveItem.isHidden = false
     } else {
       liveItem.isHidden = true
@@ -190,15 +202,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     else { return }
     NSWorkspace.shared.open(permission.settingsURL)
   }
-
-  private static func title(for key: HotkeyKey) -> String {
-    switch key {
-    case .rightOption: "Right Option (⌥)"
-    case .leftOption: "Left Option (⌥)"
-    case .rightCommand: "Right Command (⌘)"
-    case .fn: "fn / Globe"
-    }
-  }
 }
 
 extension AppDelegate: NSMenuDelegate {
@@ -215,38 +218,5 @@ extension AppDelegate: NSMenuDelegate {
           (raw == settings.hotkey.rawValue || raw == settings.locale.identifier) ? .on : .off
       }
     }
-  }
-}
-
-/// The three TCC permissions the app needs, with the System Settings pane for each.
-enum Permission: String, CaseIterable {
-  case microphone
-  case inputMonitoring
-  case accessibility
-
-  var title: String {
-    switch self {
-    case .microphone: "Microphone"
-    case .inputMonitoring: "Input Monitoring"
-    case .accessibility: "Accessibility"
-    }
-  }
-
-  var isGranted: Bool {
-    switch self {
-    case .microphone: AudioRecorder.hasMicrophoneAccess()
-    case .inputMonitoring: HotkeyMonitor.hasInputMonitoringAccess()
-    case .accessibility: TextInserter.hasAccessibilityAccess()
-    }
-  }
-
-  var settingsURL: URL {
-    let pane: String
-    switch self {
-    case .microphone: pane = "Privacy_Microphone"
-    case .inputMonitoring: pane = "Privacy_ListenEvent"
-    case .accessibility: pane = "Privacy_Accessibility"
-    }
-    return URL(string: "x-apple.systempreferences:com.apple.preference.security?\(pane)")!
   }
 }

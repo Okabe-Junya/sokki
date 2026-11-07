@@ -1,5 +1,6 @@
 .build/
 .build-*/
+.build-analyze.log
 build/
 .swiftpm/
 *.xcodeproj

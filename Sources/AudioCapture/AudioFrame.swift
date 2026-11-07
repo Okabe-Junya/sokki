@@ -1,4 +1,4 @@
-import AVFoundation
+import AVFAudio
 
 /// One chunk of microphone audio, already converted to the format the
 /// speech engine asked for. Buffers are never mutated after creation, so
@@ -13,11 +13,4 @@ public struct AudioFrame: @unchecked Sendable {
     self.buffer = buffer
     self.level = level
   }
-}
-
-public enum AudioCaptureError: Error, Sendable {
-  case microphoneAccessDenied
-  case noInputDevice
-  case engineStartFailed(String)
-  case converterUnavailable
 }

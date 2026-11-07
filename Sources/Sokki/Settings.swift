@@ -4,6 +4,8 @@ import HotkeyKit
 /// User-visible settings, persisted in `UserDefaults`.
 @MainActor
 final class Settings {
+  static let supportedLocales = ["ja-JP", "en-US"].map(Locale.init(identifier:))
+
   private let defaults = UserDefaults.standard
 
   var hotkey: HotkeyKey {
@@ -15,6 +17,4 @@ final class Settings {
     get { Locale(identifier: defaults.string(forKey: "locale") ?? "ja-JP") }
     set { defaults.set(newValue.identifier, forKey: "locale") }
   }
-
-  static let supportedLocales = ["ja-JP", "en-US"].map(Locale.init(identifier:))
 }

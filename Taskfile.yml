@@ -1,0 +1,66 @@
+version: "3"
+
+vars:
+  IDENTITY: '{{.IDENTITY | default "-"}}'
+
+tasks:
+  default:
+    cmds:
+      - task --list
+
+  app:
+    desc: Build build/Sokki.app (IDENTITY="Sokki Development" for a stable signature)
+    cmds:
+      - sh scripts/build-app.sh "{{.IDENTITY}}"
+
+  run:
+    desc: Build and launch the app
+    deps: [app]
+    cmds:
+      - open build/Sokki.app
+
+  identity:
+    desc: Create the self-signed "Sokki Development" signing identity
+    cmds:
+      - sh scripts/make-identity.sh
+
+  test:
+    desc: Run the test suite
+    cmds:
+      - swift test
+
+  fmt:
+    desc: Format sources with swift-format
+    cmds:
+      - swift format --in-place --recursive Sources Tests Package.swift
+
+  lint:
+    desc: Lint with swift-format (strict) and SwiftLint (strict, all rules)
+    cmds:
+      - swift format lint --strict --recursive Sources Tests Package.swift
+      - swiftlint lint --strict --quiet
+
+  analyze:
+    desc: SwiftLint analyzer rules (type-aware; needs a clean verbose build log)
+    cmds:
+      - rm -rf .build-analyze
+      - swift build --scratch-path .build-analyze -v > .build-analyze.log 2>&1
+      - swiftlint analyze --strict --quiet --compiler-log-path .build-analyze.log
+      - rm -rf .build-analyze .build-analyze.log
+
+  fix:
+    desc: Apply SwiftLint autocorrections, then format
+    cmds:
+      - swiftlint lint --fix --quiet
+      - task: fmt
+
+  check:
+    desc: Everything CI would run
+    cmds:
+      - task: lint
+      - task: analyze
+      - task: test
+
+  clean:
+    cmds:
+      - rm -rf .build build

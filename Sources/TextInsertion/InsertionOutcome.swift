@@ -1,0 +1,9 @@
+/// What `TextInserter.insert(_:)` did with the text.
+public enum InsertionOutcome: Sendable, Equatable {
+  /// Text was pasted into the frontmost app and the previous clipboard
+  /// contents were (or will shortly be) restored.
+  case pasted
+  /// Secure input was active (password field, Terminal "Secure Keyboard
+  /// Entry"). Nothing was inserted and the clipboard was left untouched.
+  case blockedBySecureInput
+}

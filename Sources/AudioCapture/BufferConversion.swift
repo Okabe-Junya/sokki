@@ -1,4 +1,4 @@
-import AVFoundation
+import AVFAudio
 
 func outputFrameCapacity(
   inputFrames: AVAudioFrameCount, inputSampleRate: Double, outputSampleRate: Double
@@ -42,13 +42,13 @@ func rmsLevel(of buffer: AVAudioPCMBuffer) -> Float {
   let samplesPerPointer = buffer.format.isInterleaved ? frames * channels : frames
   var sum: Float = 0
   if let data = buffer.floatChannelData {
-    for p in 0..<pointers {
-      for i in 0..<samplesPerPointer { sum += data[p][i] * data[p][i] }
+    for pointer in 0..<pointers {
+      for index in 0..<samplesPerPointer { sum += data[pointer][index] * data[pointer][index] }
     }
   } else if let data = buffer.int16ChannelData {
-    for p in 0..<pointers {
-      for i in 0..<samplesPerPointer {
-        let sample = Float(data[p][i]) / Float(Int16.max)
+    for pointer in 0..<pointers {
+      for index in 0..<samplesPerPointer {
+        let sample = Float(data[pointer][index]) / Float(Int16.max)
         sum += sample * sample
       }
     }

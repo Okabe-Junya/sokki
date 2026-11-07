@@ -17,8 +17,8 @@ no third-party dependencies.
 ## Build and run
 
 ```sh
-make app      # build/Sokki.app
-make run
+task app      # build/Sokki.app
+task run
 ```
 
 Sokki is a menu bar app. On first launch it asks for three permissions, each
@@ -37,18 +37,30 @@ only with Apple keyboards.
 
 ## Signing
 
-`make app` signs ad-hoc by default, which is fine for a quick try but macOS
+`task app` signs ad-hoc by default, which is fine for a quick try but macOS
 forgets the three permissions every time the app is rebuilt. For daily use,
 sign with a stable identity:
 
 ```sh
-sh scripts/make-identity.sh          # self-signed "Sokki Development" in your login keychain
-make app IDENTITY="Sokki Development"
+task identity                        # self-signed "Sokki Development" in your login keychain
+task app IDENTITY="Sokki Development"
 ```
 
 An Apple Development certificate from Xcode (any Apple Account, no paid
 program) works the same way; `security find-identity -v -p codesigning` lists
 what is available.
+
+## Development
+
+```sh
+brew install go-task swiftlint
+task check    # swift-format lint, SwiftLint (every rule, strict), analyzer rules, tests
+task fix      # autocorrect what the linters can, then format
+```
+
+Formatting is `swift format` with its defaults. SwiftLint runs with every rule
+enabled and warnings treated as errors; the few rules switched off, and why,
+are listed in `.swiftlint.yml`.
 
 ## Layout
 
