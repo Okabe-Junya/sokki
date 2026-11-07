@@ -1,4 +1,4 @@
-# Koe
+# Sokki
 
 Push-to-talk dictation for macOS that never leaves your Mac.
 
@@ -17,11 +17,11 @@ no third-party dependencies.
 ## Build and run
 
 ```sh
-make app      # build/Koe.app
+make app      # build/Sokki.app
 make run
 ```
 
-Koe is a menu bar app. On first launch it asks for three permissions, each
+Sokki is a menu bar app. On first launch it asks for three permissions, each
 of which can also be opened from the menu:
 
 | Permission | Why |
@@ -41,19 +41,14 @@ only with Apple keyboards.
 forgets the three permissions every time the app is rebuilt. For daily use,
 sign with a stable identity:
 
-1. Create one, either by signing in to Xcode with any Apple Account
-   (Settings → Accounts → Manage Certificates → Apple Development), or in
-   Keychain Access → Certificate Assistant → Create a Certificate with
-   type "Code Signing".
-2. Build with it:
+```sh
+sh scripts/make-identity.sh          # self-signed "Sokki Development" in your login keychain
+make app IDENTITY="Sokki Development"
+```
 
-   ```sh
-   CODESIGN_IDENTITY="Apple Development: you@example.com (TEAMID)" make app
-   ```
-
-   `security find-identity -v -p codesigning` lists the identities available.
-
-No paid developer program is needed to run the app on your own Mac.
+An Apple Development certificate from Xcode (any Apple Account, no paid
+program) works the same way; `security find-identity -v -p codesigning` lists
+what is available.
 
 ## Layout
 
@@ -63,7 +58,7 @@ No paid developer program is needed to run the app on your own Mac.
 | `AudioCapture` | `AVAudioEngine` microphone capture converted to the engine's format |
 | `Transcription` | `SpeechEngine` protocol and the Apple `SpeechAnalyzer` implementation |
 | `TextInsertion` | Clipboard paste with promise-based read receipt and clipboard restore |
-| `Koe` | Menu bar app and the per-utterance `DictationSession` |
+| `Sokki` | Menu bar app and the per-utterance `DictationSession` |
 
 ## License
 

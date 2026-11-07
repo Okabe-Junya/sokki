@@ -9,7 +9,7 @@ extension NSPasteboard.PasteboardType {
 
 typealias PasteboardSnapshot = [[NSPasteboard.PasteboardType: Data]]
 
-let insertLog = Logger(subsystem: "dev.okabe.koe", category: "insert")
+let insertLog = Logger(subsystem: "dev.junya.sokki", category: "insert")
 
 @MainActor
 enum PasteboardSnapshotter {

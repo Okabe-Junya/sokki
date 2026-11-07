@@ -12,7 +12,7 @@ import os
 /// - The time between `start` returning and the first frame is the engine
 ///   start latency; it is logged so experiment E5 can read it.
 public actor AudioRecorder {
-  private static let logger = Logger(subsystem: "dev.okabe.koe", category: "audio")
+  private static let logger = Logger(subsystem: "dev.junya.sokki", category: "audio")
 
   private var engine: AVAudioEngine?
   private var configurationObserver: (any NSObjectProtocol)?

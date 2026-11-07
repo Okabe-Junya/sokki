@@ -21,7 +21,7 @@ actor DictationSession {
   private let recorder: AudioRecorder
   private let inserter: TextInserter
   private let observer: @Sendable (SessionState, String) -> Void
-  private let logger = Logger(subsystem: "dev.okabe.koe", category: "session")
+  private let logger = Logger(subsystem: "dev.junya.sokki", category: "session")
 
   private var state: SessionState = .idle
   private var utterance: Task<String, Error>?

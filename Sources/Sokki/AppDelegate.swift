@@ -8,7 +8,7 @@ import os
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
   private let settings = Settings()
-  private let logger = Logger(subsystem: "dev.okabe.koe", category: "app")
+  private let logger = Logger(subsystem: "dev.junya.sokki", category: "app")
   private var statusItem: NSStatusItem?
   private var stateItem = NSMenuItem()
   private var liveItem = NSMenuItem()
@@ -18,7 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
   func applicationDidFinishLaunching(_ notification: Notification) {
     let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-    item.button?.image = NSImage(systemSymbolName: "mic", accessibilityDescription: "Koe")
+    item.button?.image = NSImage(systemSymbolName: "mic", accessibilityDescription: "Sokki")
     item.menu = buildMenu()
     statusItem = item
 
@@ -135,7 +135,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     menu.addItem(.separator())
     menu.addItem(
       NSMenuItem(
-        title: "Quit Koe", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        title: "Quit Sokki", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
     menu.delegate = self
     render(.idle, live: "")
     return menu

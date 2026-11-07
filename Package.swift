@@ -4,10 +4,10 @@ import PackageDescription
 // Dependency-free by design: every layer is built on Apple frameworks
 // (Speech, AVFoundation, AppKit, CoreGraphics) shipped with macOS 26.
 let package = Package(
-  name: "koe",
+  name: "sokki",
   platforms: [.macOS(.v26)],
   products: [
-    .executable(name: "Koe", targets: ["Koe"])
+    .executable(name: "Sokki", targets: ["Sokki"])
   ],
   targets: [
     .target(name: "HotkeyKit"),
@@ -15,7 +15,7 @@ let package = Package(
     .target(name: "Transcription", dependencies: ["AudioCapture"]),
     .target(name: "TextInsertion"),
     .executableTarget(
-      name: "Koe",
+      name: "Sokki",
       dependencies: ["HotkeyKit", "AudioCapture", "Transcription", "TextInsertion"]
     ),
     .testTarget(name: "HotkeyKitTests", dependencies: ["HotkeyKit"]),

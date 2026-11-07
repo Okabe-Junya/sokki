@@ -4,7 +4,7 @@ app:
 	sh scripts/build-app.sh $(IDENTITY)
 
 run: app
-	open build/Koe.app
+	open build/Sokki.app
 
 test:
 	swift test

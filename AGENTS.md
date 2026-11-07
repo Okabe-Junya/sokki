@@ -8,7 +8,7 @@ Working agreement for AI agents in this repository.
   diagnostics properly instead of silencing them.
 - Keep the module boundaries in `Package.swift`: `HotkeyKit`, `AudioCapture`,
   `Transcription`, `TextInsertion` know nothing about each other; only the
-  `Koe` target wires them together.
+  `Sokki` target wires them together.
 - One `SpeechTranscriber` is bound to one `SpeechAnalyzer` for its whole
   lifetime. Never attach a transcriber to a second analyzer (runtime trap).
 - Verify with `swift test` and `make app`; run the `.app`, not the bare

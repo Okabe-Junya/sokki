@@ -6,8 +6,8 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct PasteSessionTests {
-  let pasteboard = NSPasteboard(name: NSPasteboard.Name("dev.okabe.koe.test"))
-  let custom = NSPasteboard.PasteboardType("dev.okabe.koe.test.custom")
+  let pasteboard = NSPasteboard(name: NSPasteboard.Name("dev.junya.sokki.test"))
+  let custom = NSPasteboard.PasteboardType("dev.junya.sokki.test.custom")
 
   private func seed() -> PasteboardSnapshot {
     let first = NSPasteboardItem()
@@ -38,12 +38,12 @@ struct PasteSessionTests {
 
   @Test func readingPromiseRecordsReceipt() {
     let expected = seed()
-    let session = PasteSession(text: "こんにちは koe", pasteboard: pasteboard)
+    let session = PasteSession(text: "こんにちは sokki", pasteboard: pasteboard)
     #expect(session.provider.receivedAt == nil)
     #expect(pasteboard.types?.contains(.transient) == true)
     #expect(pasteboard.types?.contains(.concealed) == true)
 
-    #expect(pasteboard.string(forType: .string) == "こんにちは koe")
+    #expect(pasteboard.string(forType: .string) == "こんにちは sokki")
     #expect(session.provider.receivedAt != nil)
 
     #expect(session.restoreIfUnchanged())
