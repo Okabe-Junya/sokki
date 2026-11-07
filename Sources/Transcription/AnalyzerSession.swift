@@ -1,10 +1,33 @@
-import AVFoundation
+import AVFAudio
 import AudioCapture
 import CoreMedia
 import Speech
 
 actor AnalyzerSession {
-  private static let finalizationTimeout = Duration.seconds(2)
+  private struct Utterance {
+    let start: CMTime
+    let output: AsyncThrowingStream<TranscriptUpdate, Error>.Continuation
+    /// Set once `finalize(through:)` has returned.
+    var end: CMTime?
+    var finalizedText = ""
+    var finalizedThrough: CMTime
+    var volatileStart: CMTime?
+
+    // Trailing silence yields no result reaching `end`, so a finalized utterance is one
+    // with no volatile text left waiting for its final result.
+    var isFinalized: Bool {
+      guard let end else { return false }
+      return finalizedThrough >= end || volatileStart == nil
+    }
+
+    init(start: CMTime, output: AsyncThrowingStream<TranscriptUpdate, Error>.Continuation) {
+      self.start = start
+      self.output = output
+      self.finalizedThrough = start
+    }
+  }
+
+  private static let finalizationTimeoutSeconds = 2
 
   private var locale: Locale?
   private var analyzer: SpeechAnalyzer?
@@ -20,22 +43,22 @@ actor AnalyzerSession {
   func prepare(locale requested: Locale) async throws {
     if analyzer != nil, locale == requested { return }
     guard utterance == nil else { throw SpeechEngineError.alreadyTranscribing }
-    guard let locale = await SpeechTranscriber.supportedLocale(equivalentTo: requested) else {
+    guard let supported = await SpeechTranscriber.supportedLocale(equivalentTo: requested) else {
       throw SpeechEngineError.localeUnsupported(requested)
     }
     await tearDown()
     // The framework logs "modules with unallocated locales" unless the locale is reserved first.
-    _ = try await AssetInventory.reserve(locale: locale)
+    _ = try await AssetInventory.reserve(locale: supported)
 
     let transcriber = SpeechTranscriber(
-      locale: locale,
+      locale: supported,
       transcriptionOptions: [],
       // Without .fastResults no volatile result arrives until the input sequence ends (measured 2026-11-08).
       reportingOptions: [.volatileResults, .fastResults],
       attributeOptions: [.audioTimeRange]
     )
     let installed = await SpeechTranscriber.installedLocales
-    if !installed.contains(where: { $0.identifier(.bcp47) == locale.identifier(.bcp47) }) {
+    if !installed.contains(where: { $0.identifier(.bcp47) == supported.identifier(.bcp47) }) {
       do {
         if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]
         ) {
@@ -46,8 +69,8 @@ actor AnalyzerSession {
       }
     }
 
-    let analyzer = SpeechAnalyzer(modules: [transcriber])
-    try await analyzer.prepareToAnalyze(in: nil)
+    let newAnalyzer = SpeechAnalyzer(modules: [transcriber])
+    try await newAnalyzer.prepareToAnalyze(in: nil)
     audioFormat = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [transcriber])
 
     let results = transcriber.results
@@ -60,8 +83,8 @@ actor AnalyzerSession {
         await self?.resultsFailed(error)
       }
     }
-    self.analyzer = analyzer
-    self.locale = requested
+    analyzer = newAnalyzer
+    locale = requested
     nextUtteranceStart = .zero
   }
 
@@ -69,9 +92,13 @@ actor AnalyzerSession {
     _ frames: AsyncStream<AudioFrame>,
     into output: AsyncThrowingStream<TranscriptUpdate, Error>.Continuation
   ) async {
-    guard let analyzer else { return output.finish(throwing: SpeechEngineError.notPrepared) }
+    guard let analyzer else {
+      output.finish(throwing: SpeechEngineError.notPrepared)
+      return
+    }
     guard utterance == nil else {
-      return output.finish(throwing: SpeechEngineError.alreadyTranscribing)
+      output.finish(throwing: SpeechEngineError.alreadyTranscribing)
+      return
     }
     utterance = Utterance(start: nextUtteranceStart, output: output)
     defer { utterance = nil }
@@ -88,7 +115,8 @@ actor AnalyzerSession {
       }
       guard let lastTime = try await analyzer.analyzeSequence(input) else {
         output.yield(TranscriptUpdate(text: "", isFinal: true))
-        return output.finish()
+        output.finish()
+        return
       }
       nextUtteranceStart = lastTime
       try await analyzer.finalize(through: lastTime)
@@ -106,7 +134,9 @@ actor AnalyzerSession {
     return await withCheckedContinuation { continuation in
       finalizationWaiter = continuation
       finalizationTimeoutTask = Task {
-        guard (try? await Task.sleep(for: Self.finalizationTimeout)) != nil else { return }
+        guard (try? await Task.sleep(for: .seconds(Self.finalizationTimeoutSeconds))) != nil else {
+          return
+        }
         self.resumeWaiter(finalized: false)
       }
     }
@@ -154,28 +184,5 @@ actor AnalyzerSession {
       await AssetInventory.release(reservedLocale: reserved)
     }
     locale = nil
-  }
-}
-
-private struct Utterance {
-  let start: CMTime
-  let output: AsyncThrowingStream<TranscriptUpdate, Error>.Continuation
-  /// Set once `finalize(through:)` has returned.
-  var end: CMTime?
-  var finalizedText = ""
-  var finalizedThrough: CMTime
-  var volatileStart: CMTime?
-
-  init(start: CMTime, output: AsyncThrowingStream<TranscriptUpdate, Error>.Continuation) {
-    self.start = start
-    self.output = output
-    self.finalizedThrough = start
-  }
-
-  // Trailing silence yields no result reaching `end`, so a finalized utterance is one
-  // with no volatile text left waiting for its final result.
-  var isFinalized: Bool {
-    guard let end else { return false }
-    return finalizedThrough >= end || volatileStart == nil
   }
 }

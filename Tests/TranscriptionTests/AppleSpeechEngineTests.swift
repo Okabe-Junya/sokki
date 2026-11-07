@@ -95,8 +95,9 @@ struct AppleSpeechEngineTests {
     for try await update in updates {
       collected.append(update)
       if update.isFinal {
+        let finalAfter = ContinuousClock.now - framesFinished
         print(
-          "\(fixture): frames finished -> final \(ContinuousClock.now - framesFinished), \(collected.count - 1) volatile, text: \(update.text)"
+          "\(fixture): frames finished -> final \(finalAfter), \(collected.count - 1) volatile, text: \(update.text)"
         )
       }
     }
@@ -104,7 +105,7 @@ struct AppleSpeechEngineTests {
   }
 
   private func silence(seconds: Double, format: AVAudioFormat) throws -> [AudioFrame] {
-    let chunk: AVAudioFrameCount = 1600
+    let chunk: AVAudioFrameCount = 1_600
     return try (0..<Int(seconds * format.sampleRate) / Int(chunk)).map { _ in
       let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: chunk))
       buffer.frameLength = chunk
@@ -118,7 +119,7 @@ struct AppleSpeechEngineTests {
     let file = try AVAudioFile(forReading: url)
     let converter = try #require(AVAudioConverter(from: file.processingFormat, to: format))
     converter.primeMethod = .none
-    let chunk: AVAudioFrameCount = 4096
+    let chunk: AVAudioFrameCount = 4_096
     var frames: [AudioFrame] = []
     while file.framePosition < file.length {
       let input = try #require(

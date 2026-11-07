@@ -1,6 +1,5 @@
-import AVFoundation
+import AVFAudio
 import AudioCapture
-import Speech
 
 /// `SpeechEngine` backed by macOS 26 `SpeechAnalyzer` + `SpeechTranscriber`.
 ///

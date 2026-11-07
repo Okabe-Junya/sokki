@@ -5,14 +5,6 @@ import TextInsertion
 import Transcription
 import os
 
-enum SessionState: Sendable, Equatable {
-  case idle
-  case listening
-  case finalizing
-  case inserting
-  case failed(String)
-}
-
 /// Owns the lifecycle of one utterance: hotkey event → recording →
 /// transcription → cleanup → insertion. Exactly one utterance is in flight at
 /// a time; events that do not fit the current state are ignored.
@@ -36,6 +28,14 @@ actor DictationSession {
     self.recorder = recorder
     self.inserter = inserter
     self.observer = observer
+  }
+
+  private static func milliseconds(
+    from start: ContinuousClock.Instant, to end: ContinuousClock.Instant
+  )
+    -> Int
+  {
+    Int((end - start) / .milliseconds(1))
   }
 
   func prepare(locale: Locale) async throws {
@@ -101,17 +101,17 @@ actor DictationSession {
     }
     do {
       let text = Cleanup.apply(try await utterance.value)
-      let finalized = ContinuousClock.now
+      let finalAfter = Self.milliseconds(from: released, to: ContinuousClock.now)
       guard !text.isEmpty else {
-        logger.info("empty utterance, final after \(Self.ms(released, finalized)) ms")
+        logger.info("empty utterance, final after \(finalAfter) ms")
         setState(.idle)
         return
       }
       setState(.inserting)
       let outcome = try await inserter.insert(text)
-      let inserted = ContinuousClock.now
+      let insertAfter = Self.milliseconds(from: released, to: ContinuousClock.now)
       logger.info(
-        "final +\(Self.ms(released, finalized)) ms, inserted +\(Self.ms(released, inserted)) ms, \(text.count) chars, \(String(describing: outcome))"
+        "final +\(finalAfter) ms, inserted +\(insertAfter) ms, \(text.count) chars, \(String(describing: outcome))"
       )
       setState(.idle)
     } catch {
@@ -128,9 +128,5 @@ actor DictationSession {
   private func isFailed(_ state: SessionState) -> Bool {
     if case .failed = state { return true }
     return false
-  }
-
-  private static func ms(_ from: ContinuousClock.Instant, _ to: ContinuousClock.Instant) -> Int {
-    Int((to - from) / .milliseconds(1))
   }
 }

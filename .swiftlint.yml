@@ -1,0 +1,51 @@
+# Every rule is on and warnings are errors. swift-format owns layout; SwiftLint
+# owns everything else. A rule is disabled here only with its reason.
+included:
+  - Sources
+  - Tests
+  - Package.swift
+
+strict: true
+
+opt_in_rules:
+  - all
+
+analyzer_rules:
+  - all
+
+disabled_rules:
+  # Layout decided by swift-format (these contradict its output or each other).
+  - contrasted_opening_brace
+  - opening_brace
+  - attributes
+  - switch_case_on_newline
+  - conditional_returns_on_newline
+  - multiline_arguments_brackets
+  - multiline_call_arguments
+  - multiline_function_chains
+  - multiline_literal_brackets
+  - multiline_parameters_brackets
+  - vertical_whitespace_between_cases
+  - sorted_imports # swift-format's OrderedImports sorts case-sensitively (AVFoundation before AudioCapture)
+  - pattern_matching_keywords # swift-format's UseLetInEveryBoundCaseVariable requires the opposite
+  # Against Swift API Design Guidelines or the Google / Airbnb style guides.
+  - explicit_type_interface # inference is idiomatic; annotate only where it aids reading
+  - explicit_acl # `internal` is the default and both style guides omit it
+  - explicit_top_level_acl
+  - prefixed_toplevel_constant # Google forbids the Hungarian `k` prefix
+  - discouraged_default_parameter # defaulted parameters are an API Design Guidelines idiom
+  - no_grouping_extension # protocol conformance in a same-file extension is idiomatic
+  - explicit_self # both style guides omit `self.` unless the compiler requires it
+  # Noise.
+  - sorted_enum_cases # state machines read in lifecycle order, not alphabetically
+  - required_deinit # empty deinits only add lines
+  - redundant_string_enum_value # contradicts explicit_enum_raw_value; explicit values keep persisted raw values stable
+
+identifier_name:
+  excluded: ["^id$", "^fn$"] # `fn` is the key's name on the keyboard
+no_empty_block:
+  allow_compact_empty_blocks: true # a public type needs an explicit `public init() {}`
+indentation_width:
+  indentation_width: 2
+trailing_comma:
+  mandatory_comma: true

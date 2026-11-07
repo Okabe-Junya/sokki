@@ -1,16 +1,11 @@
+import Carbon.HIToolbox
 import CoreGraphics
-
-/// A raw key edge as decoded from a `CGEvent`.
-enum HotkeyInput: Equatable {
-  case flagsChanged(keyCode: CGKeyCode, flags: CGEventFlags)
-  case keyDown(keyCode: CGKeyCode)
-  case keyUp(keyCode: CGKeyCode)
-}
+import IOKit.hidsystem
 
 /// Turns raw key edges for one push-to-talk key into `HotkeyEvent`s.
 /// Timestamps are injected so the machine is testable without an event tap.
 struct HotkeyStateMachine {
-  static let escapeKeyCode: CGKeyCode = 0x35
+  static let escapeKeyCode = CGKeyCode(kVK_Escape)
 
   let key: HotkeyKey
   let minimumHold: Duration
@@ -74,28 +69,28 @@ struct HotkeyStateMachine {
 extension HotkeyKey {
   var keyCode: CGKeyCode {
     switch self {
-    case .rightOption: 0x3D
-    case .leftOption: 0x3A
-    case .rightCommand: 0x36
-    case .fn: 0x3F
+    case .rightOption: CGKeyCode(kVK_RightOption)
+    case .leftOption: CGKeyCode(kVK_Option)
+    case .rightCommand: CGKeyCode(kVK_RightCommand)
+    case .fn: CGKeyCode(kVK_Function)
     }
   }
 
-  // NX_DEVICE*KEYMASK bits from IOLLEvent.h. The generic mask alone cannot tell
+  // The generic mask alone cannot tell
   // "right Option released while left Option is still held" from "still down".
   private var deviceMask: UInt64? {
     switch self {
-    case .rightOption: 0x40
-    case .leftOption: 0x20
-    case .rightCommand: 0x10
+    case .rightOption: UInt64(NX_DEVICERALTKEYMASK)
+    case .leftOption: UInt64(NX_DEVICELALTKEYMASK)
+    case .rightCommand: UInt64(NX_DEVICERCMDKEYMASK)
     case .fn: nil
     }
   }
 
   private var siblingDeviceMasks: UInt64 {
     switch self {
-    case .rightOption, .leftOption: 0x60
-    case .rightCommand: 0x18
+    case .rightOption, .leftOption: UInt64(NX_DEVICERALTKEYMASK | NX_DEVICELALTKEYMASK)
+    case .rightCommand: UInt64(NX_DEVICERCMDKEYMASK | NX_DEVICELCMDKEYMASK)
     case .fn: 0
     }
   }

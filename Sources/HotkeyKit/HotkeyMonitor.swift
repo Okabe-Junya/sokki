@@ -13,13 +13,6 @@ import os
 /// - Press / release / cancel / double-tap classification follows the timing
 ///   constants given to `init`.
 public final class HotkeyMonitor: @unchecked Sendable {
-  public let key: HotkeyKey
-  public let minimumHold: Duration
-  public let doubleTapWindow: Duration
-
-  public let events: AsyncStream<HotkeyEvent>
-  private let continuation: AsyncStream<HotkeyEvent>.Continuation
-
   private struct State {
     var machine: HotkeyStateMachine
     var tap: CFMachPort?
@@ -27,12 +20,22 @@ public final class HotkeyMonitor: @unchecked Sendable {
     var runLoop: CFRunLoop?
   }
 
+  @usableFromInline static let defaultMinimumHoldMilliseconds = 300
+  @usableFromInline static let defaultDoubleTapWindowMilliseconds = 300
+
+  public let key: HotkeyKey
+  public let minimumHold: Duration
+  public let doubleTapWindow: Duration
+
+  public let events: AsyncStream<HotkeyEvent>
+  private let continuation: AsyncStream<HotkeyEvent>.Continuation
+
   private let state: OSAllocatedUnfairLock<State>
 
   public init(
     key: HotkeyKey,
-    minimumHold: Duration = .milliseconds(300),
-    doubleTapWindow: Duration = .milliseconds(300)
+    minimumHold: Duration = .milliseconds(HotkeyMonitor.defaultMinimumHoldMilliseconds),
+    doubleTapWindow: Duration = .milliseconds(HotkeyMonitor.defaultDoubleTapWindowMilliseconds)
   ) {
     self.key = key
     self.minimumHold = minimumHold

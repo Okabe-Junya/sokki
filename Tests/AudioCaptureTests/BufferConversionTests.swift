@@ -5,9 +5,9 @@ import Testing
 
 struct BufferConversionTests {
   @Test(arguments: [
-    (AVAudioFrameCount(4096), 48_000.0, 16_000.0, AVAudioFrameCount(1366)),
-    (4096, 44_100, 16_000, 1487),
-    (4096, 16_000, 16_000, 4096),
+    (AVAudioFrameCount(4_096), 48_000.0, 16_000.0, AVAudioFrameCount(1_366)),
+    (4_096, 44_100, 16_000, 1_487),
+    (4_096, 16_000, 16_000, 4_096),
     (0, 48_000, 16_000, 0),
   ])
   func outputCapacityRoundsUp(
@@ -32,10 +32,11 @@ struct BufferConversionTests {
     let format = try #require(
       AVAudioFormat(
         commonFormat: .pcmFormatFloat32, sampleRate: 16_000, channels: 1, interleaved: false))
-    let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 1600))
-    buffer.frameLength = 1600
-    for i in 0..<1600 {
-      buffer.floatChannelData![0][i] = 0.5 * sin(2 * .pi * 100 * Float(i) / 16_000)
+    let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 1_600))
+    buffer.frameLength = 1_600
+    let channel = try #require(buffer.floatChannelData)[0]
+    for index in 0..<1_600 {
+      channel[index] = 0.5 * sin(2 * .pi * 100 * Float(index) / 16_000)
     }
     #expect(abs(rmsLevel(of: buffer) - Float(0.5) / Float(2).squareRoot()) < 1e-3)
   }
@@ -51,7 +52,8 @@ struct BufferConversionTests {
     let buffer = try #require(
       AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(max(samples.count, 1))))
     buffer.frameLength = AVAudioFrameCount(samples.count)
-    for (i, sample) in samples.enumerated() { buffer.int16ChannelData![0][i] = sample }
+    let channel = try #require(buffer.int16ChannelData)[0]
+    for (index, sample) in samples.enumerated() { channel[index] = sample }
     return buffer
   }
 }
