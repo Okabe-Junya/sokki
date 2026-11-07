@@ -1,7 +1,7 @@
 .PHONY: app run test lint fmt clean
 
 app:
-	sh scripts/build-app.sh
+	sh scripts/build-app.sh $(IDENTITY)
 
 run: app
 	open build/Koe.app

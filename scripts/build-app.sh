@@ -1,17 +1,18 @@
 #!/bin/sh
 # Builds Koe with SwiftPM, assembles build/Koe.app and signs it.
 #
+# Usage: build-app.sh [identity]
+#   identity   name or SHA-1 from `security find-identity -v -p codesigning`;
+#              falls back to $CODESIGN_IDENTITY, then "-" (ad-hoc). Ad-hoc
+#              signatures change on every build, so macOS forgets the app's
+#              privacy permissions each time; use a stable identity for daily use.
 # Environment:
-#   CONFIGURATION      debug | release (default release)
-#   CODESIGN_IDENTITY  identity name or SHA-1 from `security find-identity -v -p codesigning`.
-#                      Default "-" (ad-hoc). Ad-hoc signatures change on every
-#                      build, so macOS forgets the app's privacy permissions
-#                      each time; use a stable identity for daily use.
+#   CONFIGURATION  debug | release (default release)
 set -eu
 
 root=$(cd "$(dirname "$0")/.." && pwd)
 configuration=${CONFIGURATION:-release}
-identity=${CODESIGN_IDENTITY:--}
+identity=${1:-${CODESIGN_IDENTITY:--}}
 app="$root/build/Koe.app"
 
 swift build --package-path "$root" -c "$configuration" --product Koe
