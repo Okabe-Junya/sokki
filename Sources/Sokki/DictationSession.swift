@@ -20,6 +20,7 @@ actor DictationSession {
 
   private var state: SessionState = .idle
   private var utterance: Task<String, Error>?
+  private var peakLevel: Float = 0
 
   init(
     engine: any SpeechEngine,
@@ -64,13 +65,17 @@ actor DictationSession {
 
   private func startListening() async {
     guard state == .idle || state.isFailed else { return }
+    guard AudioRecorder.hasMicrophoneAccess() else {
+      setState(.failed("Microphone permission missing"))
+      return
+    }
     guard let format = await engine.preferredAudioFormat() else {
       setState(.failed("speech engine not ready"))
       return
     }
     do {
       let frames = try await recorder.start(outputFormat: format)
-      let updates = engine.transcribe(frames)
+      let updates = engine.transcribe(metered(frames))
       setState(.listening(locked: false))
       utterance = Task {
         var finalText = ""
@@ -86,6 +91,21 @@ actor DictationSession {
     } catch {
       setState(.failed("\(error)"))
     }
+  }
+
+  // A denied or muted microphone yields digital silence, which the recognizer
+  // still turns into text; the peak level tells the two apart.
+  private func metered(_ frames: AsyncStream<AudioFrame>) -> AsyncStream<AudioFrame> {
+    peakLevel = 0
+    let (stream, continuation) = AsyncStream<AudioFrame>.makeStream()
+    Task {
+      for await frame in frames {
+        peakLevel = max(peakLevel, frame.level)
+        continuation.yield(frame)
+      }
+      continuation.finish()
+    }
+    return stream
   }
 
   private func lock() {
@@ -119,6 +139,11 @@ actor DictationSession {
     do {
       let text = Cleanup.apply(try await utterance.value)
       let finalAfter = Self.milliseconds(from: released, to: ContinuousClock.now)
+      guard peakLevel > 0 else {
+        logger.error("no audio captured, final after \(finalAfter) ms")
+        setState(.failed("No audio captured: check the Microphone permission and input device"))
+        return
+      }
       guard !text.isEmpty else {
         logger.info("empty utterance, final after \(finalAfter) ms")
         setState(.idle)
