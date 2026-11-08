@@ -1,13 +1,19 @@
 import AVFoundation
 import AudioCapture
 import Foundation
+import Speech
 import Testing
 
 @testable import Transcription
 
+// Hosted CI runners have no speech model installed and cannot download one.
+private let needsJapaneseModel: ConditionTrait = .enabled("ja-JP speech model is not installed") {
+  await SpeechTranscriber.installedLocales.contains { $0.identifier(.bcp47) == "ja-JP" }
+}
+
 @Suite(.serialized)
 struct AppleSpeechEngineTests {
-  @Test func reusesOneAnalyzerAcrossUtterances() async throws {
+  @Test(needsJapaneseModel) func reusesOneAnalyzerAcrossUtterances() async throws {
     let engine = AppleSpeechEngine()
     try await engine.prepare(locale: Locale(identifier: "ja-JP"))
     let format = try #require(await engine.preferredAudioFormat())
@@ -28,7 +34,7 @@ struct AppleSpeechEngineTests {
     #expect(second.filter(\.isFinal).count == 1)
   }
 
-  @Test func trailingAndPureSilenceStillFinalize() async throws {
+  @Test(needsJapaneseModel) func trailingAndPureSilenceStillFinalize() async throws {
     let engine = AppleSpeechEngine()
     try await engine.prepare(locale: Locale(identifier: "ja-JP"))
     let format = try #require(await engine.preferredAudioFormat())
@@ -43,7 +49,8 @@ struct AppleSpeechEngineTests {
     #expect(silent.isFinal)
   }
 
-  @Test func volatileArrivesWhileInputIsOpenAndConcurrentCallThrows() async throws {
+  @Test(needsJapaneseModel)
+  func volatileArrivesWhileInputIsOpenAndConcurrentCallThrows() async throws {
     let engine = AppleSpeechEngine()
     try await engine.prepare(locale: Locale(identifier: "ja-JP"))
     let format = try #require(await engine.preferredAudioFormat())
@@ -62,7 +69,7 @@ struct AppleSpeechEngineTests {
     }
   }
 
-  @Test func emptyInputYieldsEmptyFinal() async throws {
+  @Test(needsJapaneseModel) func emptyInputYieldsEmptyFinal() async throws {
     let engine = AppleSpeechEngine()
     try await engine.prepare(locale: Locale(identifier: "ja-JP"))
     let updates = try await collect(engine.transcribe(AsyncStream { $0.finish() }))
