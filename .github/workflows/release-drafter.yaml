@@ -11,8 +11,7 @@ permissions:
 
 jobs:
   label:
-    # Hosted runner minutes are billed on private repositories.
-    if: ${{ !github.event.repository.private && github.event_name == 'pull_request' }}
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-slim
     timeout-minutes: 5
     permissions:
@@ -24,8 +23,7 @@ jobs:
           config-name: release-drafter.yaml
 
   draft:
-    # Hosted runner minutes are billed on private repositories.
-    if: ${{ !github.event.repository.private && github.event_name == 'push' }}
+    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-slim
     timeout-minutes: 5
     concurrency:
