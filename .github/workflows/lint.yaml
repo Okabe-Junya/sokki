@@ -17,7 +17,7 @@ jobs:
     name: Lint
     # Formatting and lint rules are syntax-only, so they run on Linux and leave the
     # macOS runner pool (5 concurrent jobs) to the builds.
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-26.04-arm
     timeout-minutes: 10
     # swift-format ships with the toolchain; 6.3 matches the Swift in Xcode 26.6 on macos-26.
     container: swift:6.4.2-noble@sha256:bca121f6eb59fd80340d1296887b2698ed8f3eb9eca7d80c181f8af769dc7ee0
