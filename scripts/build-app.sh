@@ -8,6 +8,8 @@
 #              privacy permissions each time; use a stable identity for daily use.
 # Environment:
 #   CONFIGURATION  debug | release (default release)
+#   VERSION        marketing version to embed; defaults to `git describe --tags`.
+#                  The release workflow passes the tag of the draft it publishes.
 set -eu
 
 root=$(cd "$(dirname "$0")/.." && pwd)
@@ -18,7 +20,7 @@ app="$root/build/Sokki.app"
 swift build --package-path "$root" -c "$configuration" --product Sokki
 bin_dir=$(swift build --package-path "$root" -c "$configuration" --show-bin-path)
 
-version=$(git -C "$root" describe --tags --always --dirty 2>/dev/null || echo 0.0.0)
+version=${VERSION:-$(git -C "$root" describe --tags --always --dirty 2>/dev/null || echo 0.0.0)}
 build=$(git -C "$root" rev-list --count HEAD 2>/dev/null || echo 1)
 
 rm -rf "$app"

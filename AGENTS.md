@@ -23,5 +23,7 @@ Working agreement for AI agents in this repository.
 - Releases: every PR gets type, `area/*`, and `bump:*` labels automatically
   (branch type `feature` → `bump:minor`, other types → `bump:patch`, a `!:`
   title or a `BREAKING CHANGE: ` footer line → `bump:major`); swap the `bump:*` label
-  before merging to override. Publishing the drafted release builds, signs,
-  and uploads the zip; never push tags by hand.
+  before merging to override. To release, run the Release workflow from the
+  Actions tab: it builds and signs the app, attaches the zip to the draft, then
+  publishes it. Releases are immutable, so a bad release is superseded by a new
+  one, never edited; never push tags by hand.
