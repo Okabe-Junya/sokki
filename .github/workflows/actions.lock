@@ -5,9 +5,11 @@ version: 'v0.0.3'
 workflows:
     '.github/workflows/analyze.yaml':
         - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
+        - 'dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d'
         - 'jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b'
     '.github/workflows/codeql.yaml':
         - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
+        - 'dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d'
         - 'github/codeql-action@33d7b85da1a04171e211befe2c739303b9a4c066'
     '.github/workflows/labeler.yaml':
         - 'actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13'
@@ -22,6 +24,7 @@ workflows:
     '.github/workflows/test.yaml':
         - 'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
         - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
+        - 'dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d'
         - 'jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b'
     '.github/workflows/verify-lockfile.yaml':
         - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
@@ -41,6 +44,11 @@ dependencies:
         commit: 'sha1-bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13'
         owner_id: 44036562
         repo_id: 177139928
+    'dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d':
+        ref: 'v4.0.3'
+        commit: 'sha1-ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d'
+        owner_id: 1588572
+        repo_id: 265601040
     'github/codeql-action@33d7b85da1a04171e211befe2c739303b9a4c066':
         ref: 'v4.39.3'
         commit: 'sha1-33d7b85da1a04171e211befe2c739303b9a4c066'

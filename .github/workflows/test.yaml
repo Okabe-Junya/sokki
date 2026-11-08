@@ -13,10 +13,36 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    name: Detect Swift changes
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      swift: ${{ steps.filter.outputs.swift }}
+    steps:
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          filters: |
+            swift:
+              - Package.swift
+              - Sources/**
+              - Tests/**
+              - Taskfile.yml
+              - mise.toml
+              - mise.lock
+              - .github/workflows/test.yaml
+
   test:
     name: Test
-    # Hosted runner minutes are billed on private repositories.
-    if: ${{ !github.event.repository.private }}
+    needs: changes
+    # Pushes to main always build; pull requests only when Swift-related files changed.
+    # A skipped job satisfies a required status check.
+    if: ${{ !cancelled() && (github.event_name == 'push' || needs.changes.outputs.swift == 'true') }}
     runs-on: macos-26
     timeout-minutes: 30
     steps:

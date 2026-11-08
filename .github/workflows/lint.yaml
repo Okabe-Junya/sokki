@@ -15,14 +15,19 @@ permissions:
 jobs:
   lint:
     name: Lint
-    # Hosted runner minutes are billed on private repositories.
-    if: ${{ !github.event.repository.private }}
-    runs-on: macos-26
-    timeout-minutes: 15
+    # Formatting and lint rules are syntax-only, so they run on Linux and leave the
+    # macOS runner pool (5 concurrent jobs) to the builds.
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 10
+    # swift-format ships with the toolchain; 6.3 matches the Swift in Xcode 26.6 on macos-26.
+    container: swift:6.3.3-noble@sha256:1038d54c80063f5cdfabc4560990c30af64b5de8ebf28161deb22ca4ad5db866
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      # The Swift image has no curl, which mise-action needs to download mise.
+      - run: apt-get update -q && apt-get install -y -q --no-install-recommends curl ca-certificates
 
       - uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
         with:

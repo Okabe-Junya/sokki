@@ -13,8 +13,6 @@ permissions:
 
 jobs:
   build:
-    # Hosted runner minutes are billed on private repositories.
-    if: ${{ !github.event.repository.private }}
     runs-on: macos-26
     timeout-minutes: 30
     permissions:
