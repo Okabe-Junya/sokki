@@ -14,6 +14,17 @@ no third-party dependencies.
 - Japanese and English are supported; the first launch downloads the chosen
   language's speech model through the system if it is not already installed
 
+## Install
+
+1. Download `Sokki-vX.Y.Z.zip` from
+   [Releases](https://github.com/Okabe-Junya/sokki/releases), unzip it, and
+   move `Sokki.app` to `/Applications`.
+2. Open it. The app is not notarized, so macOS blocks the first launch. Go to
+   System Settings → Privacy & Security and click "Open Anyway" (the button
+   stays for about an hour after the blocked attempt), or run
+   `xattr -d com.apple.quarantine /Applications/Sokki.app` and open it again.
+3. Grant the three permissions it asks for (see the table below).
+
 ## Build and run
 
 ```sh
@@ -49,6 +60,9 @@ task app IDENTITY="Sokki Development"
 An Apple Development certificate from Xcode (any Apple Account, no paid
 program) works the same way; `security find-identity -v -p codesigning` lists
 what is available.
+
+To let GitHub Releases sign with the same identity, run
+`sh scripts/export-identity.sh` and follow the commands it prints.
 
 ## Development
 

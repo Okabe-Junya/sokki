@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    # Hosted runner minutes are billed on private repositories.
+    if: ${{ !github.event.repository.private }}
+    runs-on: macos-26
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ github.event.release.tag_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          # build-app.sh derives the version from `git describe` and the build number from the commit count.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Import signing identity
+        run: sh .github/scripts/import-identity.sh "Sokki Development"
+        env:
+          SOKKI_SIGNING_P12_BASE64: ${{ secrets.SOKKI_SIGNING_P12_BASE64 }}
+          SOKKI_SIGNING_P12_PASSWORD: ${{ secrets.SOKKI_SIGNING_P12_PASSWORD }}
+
+      - run: sh scripts/build-app.sh "Sokki Development"
+
+      - run: codesign --verify --strict --deep build/Sokki.app
+
+      - name: Notarize
+        run: sh .github/scripts/notarize.sh build/Sokki.app
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+
+      - run: ditto -c -k --keepParent build/Sokki.app "Sokki-$TAG.zip"
+
+      - run: shasum -a 256 "Sokki-$TAG.zip" > "Sokki-$TAG.zip.sha256"
+
+      - run: gh release upload "$TAG" "Sokki-$TAG.zip" "Sokki-$TAG.zip.sha256" --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
