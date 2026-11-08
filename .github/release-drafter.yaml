@@ -3,40 +3,54 @@
 name-template: v$RESOLVED_VERSION
 tag-template: v$RESOLVED_VERSION
 
-version-resolver:
-  major:
-    labels: ["bump:major"]
-  minor:
-    labels: ["bump:minor"]
-  patch:
-    labels: ["bump:patch"]
-  default: patch
-
 categories:
   - title: Features
-    labels: [feature]
+    when:
+      label: feature
   - title: Bug Fixes
-    labels: [fix]
+    when:
+      label: fix
   - title: Performance
-    labels: [perf]
+    when:
+      label: perf
   - title: Refactoring
-    labels: [refactor]
+    when:
+      label: refactor
   - title: Documentation
-    labels: [docs]
+    when:
+      label: docs
   - title: Tests
-    labels: [test]
+    when:
+      label: test
   - title: Dependencies
-    labels: [dependencies]
+    when:
+      label: dependencies
   - title: Maintenance
-    labels: [chore]
+    when:
+      label: chore
   - title: Other Changes
+  # Version resolution only; the highest matching increment wins, patch is the fallback.
+  - type: version-resolver
+    semver-increment: major
+    when:
+      label: "bump:major"
+  - type: version-resolver
+    semver-increment: minor
+    when:
+      label: "bump:minor"
+  - type: version-resolver
+    semver-increment: patch
+    when:
+      label: "bump:patch"
+  - type: version-resolver
+    semver-increment: patch
 
 change-template: "- $TITLE (#$NUMBER)"
 change-title-escapes: '\<*_&'
 
 # Type labels share their names with the branch types (Okabe-Junya/<type>/...)
-# and also match a Conventional Commit title. A `!:` title or a BREAKING CHANGE
-# body wins as major; swap the bump:* label on the PR to override before merge.
+# and also match a Conventional Commit title. A `!:` title or a breaking-change
+# footer line wins as major; swap the bump:* label on the PR to override before merge.
 autolabeler:
   - label: "bump:major"
     title: ['/^\w+(\(.+\))?!:/']
