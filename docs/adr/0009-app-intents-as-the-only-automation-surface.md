@@ -4,7 +4,7 @@ Date: 2026-11-08
 
 ## Status
 
-Accepted
+Superseded by ADR 10 on 2026-11-08: the self-signed releases of ADR 8 cannot register App Intents.
 
 ## Context
 
