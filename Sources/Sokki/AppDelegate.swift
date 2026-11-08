@@ -12,12 +12,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
   private let settings = Settings()
   private let logger = Logger(subsystem: "dev.junya.sokki", category: "app")
+  private let permissionsWindow = PermissionsWindowController()
   private var statusItem: NSStatusItem?
   private var stateItem = NSMenuItem()
   private var liveItem = NSMenuItem()
+  private var permissionsItem = NSMenuItem()
   private var session: DictationSession?
   private var hotkey: HotkeyMonitor?
   private var hotkeyTask: Task<Void, Never>?
+  private var lastState: SessionState = .idle
+  private var missingPermissions = Permission.missing
 
   private static func title(for key: HotkeyKey) -> String {
     switch key {
@@ -33,6 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     item.button?.image = NSImage(systemSymbolName: "mic", accessibilityDescription: "Sokki")
     item.menu = buildMenu()
     statusItem = item
+    permissionsWindow.onChange = { [weak self] _ in self?.refreshPermissions() }
 
     let dictation = DictationSession(
       engine: AppleSpeechEngine(),
@@ -45,6 +50,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     Task { await bootstrap(dictation) }
   }
 
+  func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows _: Bool) -> Bool {
+    if !missingPermissions.isEmpty { permissionsWindow.show() }
+    return false
+  }
+
   private func bootstrap(_ session: DictationSession) async {
     if !AudioRecorder.hasMicrophoneAccess() {
       _ = await AudioRecorder.requestMicrophoneAccess()
@@ -55,6 +65,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     if !TextInserter.hasAccessibilityAccess() {
       _ = TextInserter.requestAccessibilityAccess()
     }
+    refreshPermissions()
+    if !missingPermissions.isEmpty { permissionsWindow.show() }
     await prepareEngine(session)
     startHotkey(session)
   }
@@ -93,12 +105,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       return
     }
     hotkey = monitor
+    refreshPermissions()
     render(.idle, live: "")
     hotkeyTask = Task {
       for await event in monitor.events {
         await session.handle(event)
       }
     }
+  }
+
+  private func refreshPermissions() {
+    missingPermissions = Permission.missing
+    if lastState == .idle { render(.idle, live: "") }
   }
 
   // MARK: Menu
@@ -137,13 +155,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     menu.addItem(localeRoot)
     menu.addItem(.separator())
 
-    for permission in Permission.allCases {
-      let item = NSMenuItem(
-        title: permission.title, action: #selector(openPermission(_:)), keyEquivalent: "")
-      item.representedObject = permission.rawValue
-      item.target = self
-      menu.addItem(item)
-    }
+    permissionsItem = NSMenuItem(
+      title: "Permissions…", action: #selector(showPermissions), keyEquivalent: "")
+    permissionsItem.target = self
+    menu.addItem(permissionsItem)
     menu.addItem(.separator())
     menu.addItem(
       NSMenuItem(
@@ -154,8 +169,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   }
 
   private func render(_ state: SessionState, live: String) {
+    lastState = state
     let symbol: String
     switch state {
+    case .idle where !missingPermissions.isEmpty:
+      symbol = "mic.slash"
+      stateItem.title =
+        "Missing: \(missingPermissions.map(\.title).joined(separator: ", ")) — see Permissions…"
     case .idle:
       symbol = "mic"
       stateItem.title =
@@ -175,6 +195,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     case .failed(let message):
       symbol = "mic.slash"
       stateItem.title = "Error: \(message)"
+      if !Permission.missing.isEmpty { permissionsWindow.show() }
     }
     statusItem?.button?.image = NSImage(
       systemSymbolName: symbol, accessibilityDescription: stateItem.title)
@@ -201,21 +222,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     Task { await prepareEngine(session) }
   }
 
-  @objc private func openPermission(_ sender: NSMenuItem) {
-    guard let raw = sender.representedObject as? String, let permission = Permission(rawValue: raw)
-    else { return }
-    NSWorkspace.shared.open(permission.settingsURL)
+  @objc private func showPermissions() {
+    permissionsWindow.show()
   }
 }
 
 extension AppDelegate: NSMenuDelegate {
   func menuNeedsUpdate(_ menu: NSMenu) {
+    refreshPermissions()
+    let missing = missingPermissions.count
+    permissionsItem.title = missing == 0 ? "Permissions…" : "Permissions… (\(missing) missing)"
     for item in menu.items {
-      if let raw = item.representedObject as? String {
-        if let permission = Permission(rawValue: raw) {
-          item.state = permission.isGranted ? .on : .off
-        }
-      }
       for sub in item.submenu?.items ?? [] {
         guard let raw = sub.representedObject as? String else { continue }
         sub.state =

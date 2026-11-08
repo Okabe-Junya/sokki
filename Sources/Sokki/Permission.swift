@@ -9,11 +9,24 @@ enum Permission: String, CaseIterable {
   case inputMonitoring = "inputMonitoring"
   case accessibility = "accessibility"
 
+  static var missing: [Self] {
+    Self.allCases.filter { !$0.isGranted }
+  }
+
   var title: String {
     switch self {
     case .microphone: "Microphone"
     case .inputMonitoring: "Input Monitoring"
     case .accessibility: "Accessibility"
+    }
+  }
+
+  /// One line, shown next to the checkbox, saying what the permission is used for.
+  var reason: String {
+    switch self {
+    case .microphone: "Records your voice only while the hotkey is held."
+    case .inputMonitoring: "Notices the hotkey going down and up in any app."
+    case .accessibility: "Presses ⌘V in the frontmost app to insert the text."
     }
   }
 
