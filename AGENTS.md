@@ -7,7 +7,8 @@ Working agreement for AI agents in this repository.
 - Swift 6 language mode with complete strict concurrency. Fix data-race
   diagnostics properly instead of silencing them.
 - Keep the module boundaries in `Package.swift`: `HotkeyKit`, `AudioCapture`,
-  `Transcription`, `TextInsertion`, `Cleanup` know nothing about each other;
+  `Transcription`, `TextInsertion`, `Cleanup`, `ActivityLog` know nothing
+  about each other;
   only the `Sokki` target wires them together.
 - One `SpeechTranscriber` is bound to one `SpeechAnalyzer` for its whole
   lifetime. Never attach a transcriber to a second analyzer (runtime trap).
@@ -18,8 +19,8 @@ Working agreement for AI agents in this repository.
 - Conventional Commits, single line, no attribution trailers.
 - Decisions that are hard to reverse live in `docs/adr` (Nygard format, one
   per file). Read the relevant record before changing the speech engine,
-  hotkey model, insertion method, settings location, signing, or automation
-  surface; a changed decision gets a new superseding record.
+  hotkey model, insertion method, settings location, signing, automation
+  surface, or activity log; a changed decision gets a new superseding record.
 - Releases: every PR gets type, `area/*`, and `bump:*` labels automatically
   (branch type `feature` → `bump:minor`, other types → `bump:patch`, a `!:`
   title or a `BREAKING CHANGE: ` footer line → `bump:major`); swap the `bump:*` label
