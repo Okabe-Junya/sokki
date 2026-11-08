@@ -1,0 +1,51 @@
+name-template: v$RESOLVED_VERSION
+tag-template: v$RESOLVED_VERSION
+template: |
+  $CHANGES
+
+categories:
+  - title: Features
+    semver-increment: minor
+    when:
+      label: feat
+  - title: Bug Fixes
+    when:
+      label: fix
+  - title: Performance
+    when:
+      label: perf
+  - title: Refactoring
+    when:
+      label: refactor
+  - title: Documentation
+    when:
+      label: docs
+  - title: Maintenance
+    when:
+      labels: [chore, test]
+  - title: Other Changes
+
+# PR titles here are plain sentences, so the Conventional Commit type comes
+# from the branch name (Okabe-Junya/<type>/...) or a conventional title.
+autolabeler:
+  - labels: [feat]
+    branch: ['/(^|\/)feature\//']
+    title: ['/^feat(\(.+\))?!?:/']
+  - labels: [fix]
+    branch: ['/(^|\/)fix\//']
+    title: ['/^fix(\(.+\))?!?:/']
+  - labels: [perf]
+    branch: ['/(^|\/)perf\//']
+    title: ['/^perf(\(.+\))?!?:/']
+  - labels: [refactor]
+    branch: ['/(^|\/)refactor\//']
+    title: ['/^refactor(\(.+\))?!?:/']
+  - labels: [docs]
+    branch: ['/(^|\/)docs\//']
+    title: ['/^docs(\(.+\))?!?:/']
+  - labels: [test]
+    branch: ['/(^|\/)test\//']
+    title: ['/^test(\(.+\))?!?:/']
+  - labels: [chore]
+    branch: ['/(^|\/)chore\//']
+    title: ['/^chore(\(.+\))?!?:/']

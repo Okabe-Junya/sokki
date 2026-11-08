@@ -1,0 +1,36 @@
+name: Release Drafter
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  label:
+    # Hosted runner minutes are billed on private repositories.
+    if: ${{ !github.event.repository.private && github.event_name == 'pull_request' }}
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: release-drafter/release-drafter/autolabeler@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
+
+  draft:
+    # Hosted runner minutes are billed on private repositories.
+    if: ${{ !github.event.repository.private && github.event_name == 'push' }}
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    concurrency:
+      group: release-drafter
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
