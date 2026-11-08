@@ -34,5 +34,19 @@
       "minimumReleaseAge": "7 days",
       "automerge": false
     }
+  ],
+  "customManagers": [
+    {
+      "description": "Track the gh-actions-lock extension version pinned in the verify-lockfile workflow",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/verify-lockfile\\.yaml$/"
+      ],
+      "matchStrings": [
+        "gh extension install github/gh-actions-lock --pin (?<currentValue>v\\d+\\.\\d+\\.\\d+)"
+      ],
+      "depNameTemplate": "github/gh-actions-lock",
+      "datasourceTemplate": "github-releases"
+    }
   ]
 }
