@@ -24,15 +24,9 @@ area/app:
   - changed-files:
       - any-glob-to-any-file: ["Sources/Sokki/**", "Package.swift"]
 
-area/ci:
+area/github-management:
   - changed-files:
-      - any-glob-to-any-file:
-          - ".github/**"
-          - "scripts/**"
-          - "Taskfile.yml"
-          - "mise.toml"
-          - "mise.lock"
-          - ".swiftlint.yml"
+      - any-glob-to-any-file: [".github/**"]
 
 area/docs:
   - changed-files:
