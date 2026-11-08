@@ -15,3 +15,7 @@ Working agreement for AI agents in this repository.
   binary, when a change touches permissions or the hotkey.
 - Comments in English, only where the reason is not obvious from the code.
 - Conventional Commits, single line, no attribution trailers.
+- Decisions that are hard to reverse live in `docs/adr` (Nygard format, one
+  per file). Read the relevant record before changing the speech engine,
+  hotkey model, insertion method, settings location, signing, or automation
+  surface; a changed decision gets a new superseding record.
