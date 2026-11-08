@@ -20,3 +20,8 @@ Working agreement for AI agents in this repository.
   per file). Read the relevant record before changing the speech engine,
   hotkey model, insertion method, settings location, signing, or automation
   surface; a changed decision gets a new superseding record.
+- Releases: every PR gets type, `area/*`, and `bump:*` labels automatically
+  (branch type `feature` → `bump:minor`, other types → `bump:patch`, a `!:`
+  title or BREAKING CHANGE body → `bump:major`); swap the `bump:*` label
+  before merging to override. Publishing the drafted release builds, signs,
+  and uploads the zip; never push tags by hand.
