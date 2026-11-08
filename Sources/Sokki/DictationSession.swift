@@ -19,6 +19,8 @@ actor DictationSession {
   private let dictionary: DictionaryStore
   private let observer: @Sendable (SessionState, String) -> Void
   private let reporter: @Sendable (UtteranceReport) -> Void
+  // The text goes to the menu only; it must never travel inside an `UtteranceReport` (ADR 13).
+  private let transcriptHandler: @Sendable (String, InsertionOutcome) -> Void
   private let logger = Logger(subsystem: "dev.junya.sokki", category: "session")
 
   private var state: SessionState = .idle
@@ -32,7 +34,8 @@ actor DictationSession {
     inserter: TextInserter,
     dictionary: DictionaryStore,
     observer: @escaping @Sendable (SessionState, String) -> Void,
-    reporter: @escaping @Sendable (UtteranceReport) -> Void
+    reporter: @escaping @Sendable (UtteranceReport) -> Void,
+    transcriptHandler: @escaping @Sendable (String, InsertionOutcome) -> Void
   ) {
     self.engine = engine
     self.recorder = recorder
@@ -40,6 +43,7 @@ actor DictationSession {
     self.dictionary = dictionary
     self.observer = observer
     self.reporter = reporter
+    self.transcriptHandler = transcriptHandler
   }
 
   private static func milliseconds(
@@ -181,6 +185,7 @@ actor DictationSession {
       }
       setState(.inserting)
       let outcome = try await inserter.insert(text)
+      transcriptHandler(text, outcome)
       let insertAfter = Self.milliseconds(from: released, to: ContinuousClock.now)
       report.insertMs = insertAfter
       report.outcome = UtteranceReport.Outcome(outcome)
