@@ -17,8 +17,12 @@ jobs:
     name: Lint
     # Hosted runner minutes are billed on private repositories.
     if: ${{ !github.event.repository.private }}
-    runs-on: macos-26
-    timeout-minutes: 15
+    # Formatting and lint rules are syntax-only, so they run on Linux and leave the
+    # macOS runner pool (5 concurrent jobs) to the builds.
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 10
+    # swift-format ships with the toolchain; 6.3 matches the Swift in Xcode 26.6 on macos-26.
+    container: swift:6.3.3-noble
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
