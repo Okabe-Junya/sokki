@@ -68,13 +68,23 @@ struct HotkeyStateMachineTests {
     #expect(driver.events == [.pressed, .cancelled, .pressed, .cancelled])
   }
 
-  @Test func escapeWhileHeld() {
+  @Test func escapeIsReportedHeldOrNot() {
     var driver = Driver(.rightOption)
     driver.send(.keyDown(keyCode: 0x35), atMs: 0)
     driver.rightOption(down: true, atMs: 100)
     driver.send(.keyDown(keyCode: 0x35), atMs: 300)
     driver.rightOption(down: false, atMs: 600)
-    #expect(driver.events == [.pressed, .escape, .released(heldFor: .milliseconds(500))])
+    #expect(driver.events == [.escape, .pressed, .escape, .released(heldFor: .milliseconds(500))])
+  }
+
+  @Test func escapeDoesNotBreakDoubleTapAfterwards() {
+    var driver = Driver(.rightOption)
+    driver.send(.keyDown(keyCode: 0x35), atMs: 0)
+    driver.rightOption(down: true, atMs: 500)
+    driver.rightOption(down: false, atMs: 580)
+    driver.rightOption(down: true, atMs: 660)
+    driver.rightOption(down: false, atMs: 740)
+    #expect(driver.events == [.escape, .pressed, .cancelled, .pressed, .doubleTapped])
   }
 
   @Test func fnWorksFromFlagsChangedAlone() {
