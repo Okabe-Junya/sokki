@@ -2,24 +2,29 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:best-practices",
-    ":preserveSemverRanges"
+    ":prHourlyLimitNone"
   ],
   "timezone": "Asia/Tokyo",
   "schedule": [
     "after 3am and before 6am on monday"
   ],
-  "dependencyDashboard": true,
   "labels": [
     "dependencies"
   ],
   "commitMessagePrefix": "chore(deps):",
+  "vulnerabilityAlerts": {
+    "addLabels": [
+      "renovate/security"
+    ]
+  },
   "packageRules": [
     {
-      "description": "Actions are SHA-pinned; digest and patch/minor bumps merge on their own once checks pass",
+      "description": "Actions are SHA-pinned; non-major bumps merge on their own once checks pass",
       "matchUpdateTypes": [
         "minor",
         "patch",
         "pin",
+        "pinDigest",
         "digest"
       ],
       "minimumReleaseAge": "3 days",
@@ -33,6 +38,47 @@
       ],
       "minimumReleaseAge": "7 days",
       "automerge": false
+    },
+    {
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "addLabels": [
+        "renovate/major"
+      ]
+    },
+    {
+      "matchUpdateTypes": [
+        "minor"
+      ],
+      "addLabels": [
+        "renovate/minor"
+      ]
+    },
+    {
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "addLabels": [
+        "renovate/patch"
+      ]
+    },
+    {
+      "matchUpdateTypes": [
+        "digest"
+      ],
+      "addLabels": [
+        "renovate/digest"
+      ]
+    },
+    {
+      "matchUpdateTypes": [
+        "pin",
+        "pinDigest"
+      ],
+      "addLabels": [
+        "renovate/pin"
+      ]
     }
   ],
   "customManagers": [
