@@ -72,6 +72,12 @@ are listed in `.swiftlint.yml`.
 | `TextInsertion` | Clipboard paste with promise-based read receipt and clipboard restore |
 | `Sokki` | Menu bar app and the per-utterance `DictationSession` |
 
+## Design decisions
+
+The choices that are hard to reverse (speech engine, hotkey model, insertion
+method, settings location, signing and distribution, automation surface) are
+recorded in [docs/adr](docs/adr), one short record per decision.
+
 ## License
 
 MIT
