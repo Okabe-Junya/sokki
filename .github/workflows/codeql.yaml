@@ -15,8 +15,7 @@ permissions:
 jobs:
   changes:
     name: Detect Swift changes
-    # Hosted runner minutes are billed on private repositories.
-    if: ${{ !github.event.repository.private && github.event_name == 'pull_request' }}
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-slim
     timeout-minutes: 5
     permissions:
@@ -40,7 +39,7 @@ jobs:
     needs: changes
     # Pushes to main always scan; pull requests only when Swift sources changed.
     # A skipped job satisfies a required status check.
-    if: ${{ !cancelled() && !github.event.repository.private && (github.event_name == 'push' || needs.changes.outputs.swift == 'true') }}
+    if: ${{ !cancelled() && (github.event_name == 'push' || needs.changes.outputs.swift == 'true') }}
     runs-on: macos-26
     timeout-minutes: 30
     permissions:

@@ -15,8 +15,6 @@ permissions:
 jobs:
   lint:
     name: Lint
-    # Hosted runner minutes are billed on private repositories.
-    if: ${{ !github.event.repository.private }}
     # Formatting and lint rules are syntax-only, so they run on Linux and leave the
     # macOS runner pool (5 concurrent jobs) to the builds.
     runs-on: ubuntu-24.04-arm
