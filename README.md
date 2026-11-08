@@ -25,12 +25,7 @@ no third-party dependencies.
    `xattr -d com.apple.quarantine /Applications/Sokki.app` and open it again.
 3. Grant the three permissions it asks for (see the table below).
 
-## Build and run
-
-```sh
-task app      # build/Sokki.app
-task run
-```
+## Usage
 
 Sokki is a menu bar app. On first launch it asks for three permissions, each
 of which can also be opened from the menu:
@@ -109,57 +104,13 @@ The log keeps two files of about 1 MB each: when `activity.jsonl` fills up it
 becomes `activity.1.jsonl` and the older one is deleted. Delete either file at
 any time.
 
-## Signing
+## Contributing
 
-`task app` signs ad-hoc by default, which is fine for a quick try but macOS
-forgets the three permissions every time the app is rebuilt. For daily use,
-sign with a stable identity:
+Bug reports and feature requests are welcome as
+[issues](https://github.com/Okabe-Junya/sokki/issues). Pull requests are
+limited to collaborators, so please open an issue instead of a pull request.
 
-```sh
-task identity                        # self-signed "Sokki Development" in your login keychain
-task app IDENTITY="Sokki Development"
-```
-
-An Apple Development certificate from Xcode (any Apple Account, no paid
-program) works the same way; `security find-identity -v -p codesigning` lists
-what is available.
-
-To let GitHub Releases sign with the same identity, run
-`sh scripts/export-identity.sh` and follow the commands it prints.
-
-## Development
-
-```sh
-brew install mise   # or https://mise.jdx.dev/getting-started.html
-mise install        # task and SwiftLint at the versions in mise.toml / mise.lock
-task check          # swift-format lint, SwiftLint (every rule, strict), analyzer rules, tests
-task fix            # autocorrect what the linters can, then format
-```
-
-If `mise` is not activated in your shell, prefix the task commands with
-`mise exec --`.
-
-Formatting is `swift format` with its defaults. SwiftLint runs with every rule
-enabled and warnings treated as errors; the few rules switched off, and why,
-are listed in `.swiftlint.yml`.
-
-## Layout
-
-| Target | Role |
-|---|---|
-| `HotkeyKit` | Listen-only event tap, modifier-key press / release / double-tap state machine |
-| `AudioCapture` | `AVAudioEngine` microphone capture converted to the engine's format |
-| `Transcription` | `SpeechEngine` protocol and the Apple `SpeechAnalyzer` implementation |
-| `TextInsertion` | Clipboard paste with promise-based read receipt and clipboard restore |
-| `Cleanup` | Deterministic transcript cleanup (whitespace, fillers, self-corrections) and the JSON personal dictionary |
-| `ActivityLog` | Size-bounded JSON Lines file with one rotated generation |
-| `Sokki` | Menu bar app and the per-utterance `DictationSession` |
-
-## Design decisions
-
-The choices that are hard to reverse (speech engine, hotkey model, insertion
-method, settings location, signing and distribution, automation surface) are
-recorded in [docs/adr](docs/adr), one short record per decision.
+To build from source, see [docs/development.md](docs/development.md).
 
 ## License
 
