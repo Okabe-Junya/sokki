@@ -12,6 +12,9 @@
     "dependencies"
   ],
   "commitMessagePrefix": "chore(deps):",
+  "constraints": {
+    "ghActionsLock": "v0.4.1"
+  },
   "vulnerabilityAlerts": {
     "addLabels": [
       "renovate/security"
@@ -83,13 +86,15 @@
   ],
   "customManagers": [
     {
-      "description": "Track the gh-actions-lock extension version pinned in the verify-lockfile workflow",
+      "description": "Keep the gh-actions-lock version that verifies actions.lock in CI and the one Renovate regenerates it with in step",
       "customType": "regex",
       "managerFilePatterns": [
-        "/^\\.github/workflows/verify-lockfile\\.yaml$/"
+        "/^\\.github/workflows/verify-lockfile\\.yaml$/",
+        "/^\\.github/renovate\\.json$/"
       ],
       "matchStrings": [
-        "gh extension install github/gh-actions-lock --pin (?<currentValue>v\\d+\\.\\d+\\.\\d+)"
+        "gh extension install github/gh-actions-lock --pin (?<currentValue>v\\d+\\.\\d+\\.\\d+)",
+        "\"ghActionsLock\": \"(?<currentValue>v\\d+\\.\\d+\\.\\d+)\""
       ],
       "depNameTemplate": "github/gh-actions-lock",
       "datasourceTemplate": "github-releases"
