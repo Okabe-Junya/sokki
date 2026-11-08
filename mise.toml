@@ -1,0 +1,7 @@
+# Developer tools, pinned. Install with `mise install`; swift-format ships with Xcode.
+[tools]
+task = "3.54.0"
+swiftlint = "0.65.1"
+
+[settings]
+lockfile = true

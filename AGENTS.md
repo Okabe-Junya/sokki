@@ -11,7 +11,8 @@ Working agreement for AI agents in this repository.
   only the `Sokki` target wires them together.
 - One `SpeechTranscriber` is bound to one `SpeechAnalyzer` for its whole
   lifetime. Never attach a transcriber to a second analyzer (runtime trap).
-- Verify with `task check` and `task app`; run the `.app`, not the bare
+- Tools come from `mise.toml` (`mise install`); do not add `brew install` steps.
+  Verify with `task check` and `task app`; run the `.app`, not the bare
   binary, when a change touches permissions or the hotkey.
 - Comments in English, only where the reason is not obvious from the code.
 - Conventional Commits, single line, no attribution trailers.

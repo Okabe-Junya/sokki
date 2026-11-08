@@ -67,10 +67,14 @@ To let GitHub Releases sign with the same identity, run
 ## Development
 
 ```sh
-brew install go-task swiftlint
-task check    # swift-format lint, SwiftLint (every rule, strict), analyzer rules, tests
-task fix      # autocorrect what the linters can, then format
+brew install mise   # or https://mise.jdx.dev/getting-started.html
+mise install        # task and SwiftLint at the versions in mise.toml / mise.lock
+task check          # swift-format lint, SwiftLint (every rule, strict), analyzer rules, tests
+task fix            # autocorrect what the linters can, then format
 ```
+
+If `mise` is not activated in your shell, prefix the task commands with
+`mise exec --`.
 
 Formatting is `swift format` with its defaults. SwiftLint runs with every rule
 enabled and warnings treated as errors; the few rules switched off, and why,
@@ -84,6 +88,7 @@ are listed in `.swiftlint.yml`.
 | `AudioCapture` | `AVAudioEngine` microphone capture converted to the engine's format |
 | `Transcription` | `SpeechEngine` protocol and the Apple `SpeechAnalyzer` implementation |
 | `TextInsertion` | Clipboard paste with promise-based read receipt and clipboard restore |
+| `Cleanup` | Deterministic transcript cleanup (whitespace, fillers, self-corrections) and the JSON personal dictionary |
 | `Sokki` | Menu bar app and the per-utterance `DictationSession` |
 
 ## Design decisions
