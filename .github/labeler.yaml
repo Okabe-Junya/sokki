@@ -1,0 +1,39 @@
+# area/* labels from changed paths (actions/labeler); type and bump:* labels
+# come from release-drafter's autolabeler.
+area/hotkey:
+  - changed-files:
+      - any-glob-to-any-file: ["Sources/HotkeyKit/**", "Tests/HotkeyKitTests/**"]
+
+area/audio:
+  - changed-files:
+      - any-glob-to-any-file: ["Sources/AudioCapture/**", "Tests/AudioCaptureTests/**"]
+
+area/transcription:
+  - changed-files:
+      - any-glob-to-any-file: ["Sources/Transcription/**", "Tests/TranscriptionTests/**"]
+
+area/insertion:
+  - changed-files:
+      - any-glob-to-any-file: ["Sources/TextInsertion/**", "Tests/TextInsertionTests/**"]
+
+area/cleanup:
+  - changed-files:
+      - any-glob-to-any-file: ["Sources/Cleanup/**", "Tests/CleanupTests/**"]
+
+area/app:
+  - changed-files:
+      - any-glob-to-any-file: ["Sources/Sokki/**", "Package.swift"]
+
+area/ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**"
+          - "scripts/**"
+          - "Taskfile.yml"
+          - "mise.toml"
+          - "mise.lock"
+          - ".swiftlint.yml"
+
+area/docs:
+  - changed-files:
+      - any-glob-to-any-file: ["README.md", "AGENTS.md", "docs/**"]

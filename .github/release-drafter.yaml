@@ -1,51 +1,83 @@
+# Release notes are drafted from merged PRs; publishing the draft runs release.yaml.
+# The next version comes from the bump:* label on each merged PR (default patch).
 name-template: v$RESOLVED_VERSION
 tag-template: v$RESOLVED_VERSION
-template: |
-  $CHANGES
+
+version-resolver:
+  major:
+    labels: ["bump:major"]
+  minor:
+    labels: ["bump:minor"]
+  patch:
+    labels: ["bump:patch"]
+  default: patch
 
 categories:
   - title: Features
-    semver-increment: minor
-    when:
-      label: feat
+    labels: [feature]
   - title: Bug Fixes
-    when:
-      label: fix
+    labels: [fix]
   - title: Performance
-    when:
-      label: perf
+    labels: [perf]
   - title: Refactoring
-    when:
-      label: refactor
+    labels: [refactor]
   - title: Documentation
-    when:
-      label: docs
+    labels: [docs]
+  - title: Tests
+    labels: [test]
+  - title: Dependencies
+    labels: [dependencies]
   - title: Maintenance
-    when:
-      labels: [chore, test]
+    labels: [chore]
   - title: Other Changes
 
-# PR titles here are plain sentences, so the Conventional Commit type comes
-# from the branch name (Okabe-Junya/<type>/...) or a conventional title.
+change-template: "- $TITLE (#$NUMBER)"
+change-title-escapes: '\<*_&'
+
+# Type labels share their names with the branch types (Okabe-Junya/<type>/...)
+# and also match a Conventional Commit title. A `!:` title or a BREAKING CHANGE
+# body wins as major; swap the bump:* label on the PR to override before merge.
 autolabeler:
-  - labels: [feat]
-    branch: ['/(^|\/)feature\//']
-    title: ['/^feat(\(.+\))?!?:/']
-  - labels: [fix]
-    branch: ['/(^|\/)fix\//']
-    title: ['/^fix(\(.+\))?!?:/']
-  - labels: [perf]
-    branch: ['/(^|\/)perf\//']
-    title: ['/^perf(\(.+\))?!?:/']
-  - labels: [refactor]
-    branch: ['/(^|\/)refactor\//']
-    title: ['/^refactor(\(.+\))?!?:/']
-  - labels: [docs]
-    branch: ['/(^|\/)docs\//']
-    title: ['/^docs(\(.+\))?!?:/']
-  - labels: [test]
-    branch: ['/(^|\/)test\//']
-    title: ['/^test(\(.+\))?!?:/']
-  - labels: [chore]
-    branch: ['/(^|\/)chore\//']
-    title: ['/^chore(\(.+\))?!?:/']
+  - label: "bump:major"
+    title: ['/^\w+(\(.+\))?!:/']
+    body: ["/^BREAKING[- ]CHANGE: /m"]
+  - label: "bump:minor"
+    branch: ['/\/feature\//']
+    title: ['/^feat(\(.+\))?:/']
+  - label: "bump:patch"
+    branch: ['/\/(fix|docs|refactor|perf|test|chore)\//', '/^renovate\//']
+    title: ['/^(fix|docs|refactor|perf|test|chore)(\(.+\))?:/']
+  - label: feature
+    branch: ['/\/feature\//']
+    title: ['/^feat(\(.+\))?:/']
+  - label: fix
+    branch: ['/\/fix\//']
+    title: ['/^fix(\(.+\))?:/']
+  - label: perf
+    branch: ['/\/perf\//']
+    title: ['/^perf(\(.+\))?:/']
+  - label: refactor
+    branch: ['/\/refactor\//']
+    title: ['/^refactor(\(.+\))?:/']
+  - label: docs
+    branch: ['/\/docs\//']
+    title: ['/^docs(\(.+\))?:/']
+  - label: test
+    branch: ['/\/test\//']
+    title: ['/^test(\(.+\))?:/']
+  - label: chore
+    branch: ['/\/chore\//']
+    title: ['/^chore(\(.+\))?:/']
+  - label: dependencies
+    branch: ['/^renovate\//']
+
+template: |
+  ## What's Changed
+
+  $CHANGES
+
+  ## Install
+
+  Download `Sokki-v$RESOLVED_VERSION.zip` below, unzip it, move Sokki.app to /Applications, and follow the first-launch steps in the README.
+
+  **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION

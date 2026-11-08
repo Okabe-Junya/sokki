@@ -11,8 +11,7 @@ permissions:
 
 jobs:
   label:
-    # Hosted runner minutes are billed on private repositories.
-    if: ${{ !github.event.repository.private && github.event_name == 'pull_request' }}
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-slim
     timeout-minutes: 5
     permissions:
@@ -24,8 +23,7 @@ jobs:
           config-name: release-drafter.yaml
 
   draft:
-    # Hosted runner minutes are billed on private repositories.
-    if: ${{ !github.event.repository.private && github.event_name == 'push' }}
+    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-slim
     timeout-minutes: 5
     concurrency:
@@ -35,6 +33,17 @@ jobs:
       contents: write
       pull-requests: read
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - id: baseline
+        run: sh .github/scripts/release-baseline.sh "$GITHUB_REPOSITORY"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
       - uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
         with:
           config-name: release-drafter.yaml
+          from: ${{ steps.baseline.outputs.from }}
