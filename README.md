@@ -42,9 +42,35 @@ of which can also be opened from the menu:
 | Accessibility | Press ⌘V in the frontmost app to insert the text |
 
 The default hotkey is the right Option key. Hold it to dictate; a press
-shorter than 300 ms is ignored. fn / Globe is available in the menu; it needs
+shorter than 300 ms is ignored. Double-tap it to keep listening hands-free
+until the next tap; Escape discards. fn / Globe is available in Settings; it needs
 System Settings → Keyboard → "Press 🌐 key" set to "Do Nothing", and works
 only with Apple keyboards.
+
+## Settings
+
+Settings live in `~/.config/sokki/config.json` and nowhere else; the Settings
+window (menu → Settings…, or ⌘, while Sokki is active) edits that file, and
+edits made with any editor apply within a second. A missing key keeps its
+default, so the file only needs what differs:
+
+```json
+{
+  "hotkey": "rightOption",
+  "launchAtLogin": false,
+  "locale": "ja-JP"
+}
+```
+
+| key | values | default |
+|---|---|---|
+| `hotkey` | `rightOption`, `leftOption`, `rightCommand`, `fn` | `rightOption` |
+| `locale` | `ja-JP`, `en-US` | `ja-JP` |
+| `launchAtLogin` | `true`, `false` | `false` |
+
+"Show Defaults" in the Settings window opens the current version's defaults as a
+read-only file. A file that cannot be parsed is reported in the menu and in
+Settings; the previous values stay in effect.
 
 ## Personal dictionary
 

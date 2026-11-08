@@ -11,10 +11,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private static let accessPollIntervalSeconds = 2
   private static let liveTextMaxCharacters = 60
 
-  private let settings = Settings()
   private let logger = Logger(subsystem: "dev.junya.sokki", category: "app")
-  private let permissionsWindow = PermissionsWindowController()
+  private let config = ConfigStore(directory: ConfigDirectory.url)
   private let dictionary = DictionaryStore(file: ConfigDirectory.dictionaryFile)
+  private let permissionsWindow = PermissionsWindowController()
+  private var settingsWindow: SettingsWindowController?
   private var statusItem: NSStatusItem?
   private var stateItem = NSMenuItem()
   private var liveItem = NSMenuItem()
@@ -25,21 +26,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private var lastState: SessionState = .idle
   private var missingPermissions = Permission.missing
 
-  private static func title(for key: HotkeyKey) -> String {
-    switch key {
-    case .rightOption: "Right Option (⌥)"
-    case .leftOption: "Left Option (⌥)"
-    case .rightCommand: "Right Command (⌘)"
-    case .fn: "fn / Globe"
-    }
-  }
-
   func applicationDidFinishLaunching(_: Notification) {
     let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     item.button?.image = NSImage(systemSymbolName: "mic", accessibilityDescription: "Sokki")
     item.menu = buildMenu()
     statusItem = item
     permissionsWindow.onChange = { [weak self] _ in self?.refreshPermissions() }
+    settingsWindow = SettingsWindowController(
+      store: config,
+      actions: SettingsActions(
+        openConfigFile: { [weak self] in self?.openConfigFile() },
+        showDefaults: { [weak self] in self?.showDefaults() },
+        openDictionary: { [weak self] in self?.openDictionary() }))
 
     let dictation = DictationSession(
       engine: AppleSpeechEngine(),
@@ -50,11 +48,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       Task { @MainActor in self?.render(state, live: live) }
     }
     session = dictation
+    config.onChange = { [weak self] previous, current in
+      self?.configChanged(from: previous, to: current)
+    }
+    config.start()
     Task { await bootstrap(dictation) }
   }
 
   func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows _: Bool) -> Bool {
-    if !missingPermissions.isEmpty { permissionsWindow.show() }
+    if missingPermissions.isEmpty {
+      settingsWindow?.show()
+    } else {
+      permissionsWindow.show()
+    }
     return false
   }
 
@@ -70,14 +76,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     refreshPermissions()
     if !missingPermissions.isEmpty { permissionsWindow.show() }
+    applyLoginItem(config.config.launchAtLogin)
     await prepareEngine(session)
     startHotkey(session)
   }
 
-  private func prepareEngine(_ session: DictationSession) async {
-    render(.finalizing, live: "loading \(settings.locale.identifier) model")
+  private func configChanged(from previous: Config, to current: Config) {
+    logger.info(
+      "config: hotkey \(current.hotkey.rawValue, privacy: .public), "
+        + "locale \(current.locale, privacy: .public), launchAtLogin \(current.launchAtLogin)"
+    )
+    guard let session else { return }
+    if previous.hotkey != current.hotkey { startHotkey(session) }
+    if previous.locale != current.locale { Task { await prepareEngine(session) } }
+    if previous.launchAtLogin != current.launchAtLogin { applyLoginItem(current.launchAtLogin) }
+    if lastState == .idle { render(.idle, live: "") }
+  }
+
+  private func applyLoginItem(_ enabled: Bool) {
     do {
-      try await session.prepare(locale: settings.locale)
+      try LoginItem.set(enabled: enabled)
+    } catch {
+      logger.error("launch at login: \(error)")
+      render(.failed("launch at login: \(error.localizedDescription)"), live: "")
+    }
+  }
+
+  private func prepareEngine(_ session: DictationSession) async {
+    let locale = Locale(identifier: config.config.locale)
+    render(.finalizing, live: "loading \(locale.identifier) model")
+    do {
+      try await session.prepare(locale: locale)
       render(.idle, live: "")
     } catch {
       logger.error("prepare failed: \(error)")
@@ -88,7 +117,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private func startHotkey(_ session: DictationSession) {
     hotkeyTask?.cancel()
     hotkey?.stop()
-    let monitor = HotkeyMonitor(key: settings.hotkey)
+    let monitor = HotkeyMonitor(key: config.config.hotkey)
     do {
       try monitor.start()
     } catch HotkeyError.inputMonitoringDenied {
@@ -133,35 +162,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     menu.addItem(liveItem)
     menu.addItem(.separator())
 
-    let hotkeyMenu = NSMenu()
-    for key in HotkeyKey.allCases {
-      let item = NSMenuItem(
-        title: Self.title(for: key), action: #selector(selectHotkey(_:)), keyEquivalent: "")
-      item.representedObject = key.rawValue
-      item.target = self
-      hotkeyMenu.addItem(item)
-    }
-    let hotkeyRoot = NSMenuItem(title: "Hotkey", action: nil, keyEquivalent: "")
-    hotkeyRoot.submenu = hotkeyMenu
-    menu.addItem(hotkeyRoot)
-
-    let localeMenu = NSMenu()
-    for locale in Settings.supportedLocales {
-      let item = NSMenuItem(
-        title: locale.identifier, action: #selector(selectLocale(_:)), keyEquivalent: "")
-      item.representedObject = locale.identifier
-      item.target = self
-      localeMenu.addItem(item)
-    }
-    let localeRoot = NSMenuItem(title: "Language", action: nil, keyEquivalent: "")
-    localeRoot.submenu = localeMenu
-    menu.addItem(localeRoot)
+    let settingsItem = NSMenuItem(
+      title: "Settings…", action: #selector(showSettings), keyEquivalent: ",")
+    settingsItem.target = self
+    menu.addItem(settingsItem)
     let dictionaryItem = NSMenuItem(
       title: "Open Dictionary…", action: #selector(openDictionary), keyEquivalent: "")
     dictionaryItem.target = self
     menu.addItem(dictionaryItem)
-    menu.addItem(.separator())
-
     permissionsItem = NSMenuItem(
       title: "Permissions…", action: #selector(showPermissions), keyEquivalent: "")
     permissionsItem.target = self
@@ -177,21 +185,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
   private func render(_ state: SessionState, live: String) {
     lastState = state
+    let hotkeyName = config.config.hotkey.displayName
     let symbol: String
     switch state {
     case .idle where !missingPermissions.isEmpty:
       symbol = "mic.slash"
       stateItem.title =
         "Missing: \(missingPermissions.map(\.title).joined(separator: ", ")) — see Permissions…"
+    case .idle where config.problem != nil:
+      symbol = "exclamationmark.triangle"
+      stateItem.title = "config.json could not be read — see Settings…"
     case .idle:
       symbol = "mic"
-      stateItem.title =
-        "Idle — hold \(Self.title(for: settings.hotkey)) to dictate, double-tap for hands-free"
+      stateItem.title = "Idle — hold \(hotkeyName) to dictate, double-tap for hands-free"
     case .listening(let locked):
       symbol = locked ? "waveform" : "mic.fill"
       stateItem.title =
         locked
-        ? "Hands-free — tap \(Self.title(for: settings.hotkey)) to insert, Esc to discard"
+        ? "Hands-free — tap \(hotkeyName) to insert, Esc to discard"
         : "Listening… (release to insert, Esc to discard)"
     case .finalizing:
       symbol = "ellipsis"
@@ -214,19 +225,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
   }
 
-  @objc private func selectHotkey(_ sender: NSMenuItem) {
-    guard let raw = sender.representedObject as? String, let key = HotkeyKey(rawValue: raw) else {
-      return
-    }
-    settings.hotkey = key
-    if let session { startHotkey(session) }
-    render(.idle, live: "")
-  }
-
-  @objc private func selectLocale(_ sender: NSMenuItem) {
-    guard let identifier = sender.representedObject as? String, let session else { return }
-    settings.locale = Locale(identifier: identifier)
-    Task { await prepareEngine(session) }
+  @objc private func showSettings() {
+    settingsWindow?.show()
   }
 
   @objc private func showPermissions() {
@@ -242,19 +242,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       render(.failed("dictionary file: \(error)"), live: "")
     }
   }
+
+  private func openConfigFile() {
+    do {
+      try config.ensureFileExists()
+      NSWorkspace.shared.open(config.file)
+    } catch {
+      logger.error("config file: \(error)")
+      render(.failed("config file: \(error)"), live: "")
+    }
+  }
+
+  private func showDefaults() {
+    do {
+      NSWorkspace.shared.open(try config.defaultsFile())
+    } catch {
+      logger.error("defaults file: \(error)")
+      render(.failed("defaults file: \(error)"), live: "")
+    }
+  }
 }
 
 extension AppDelegate: NSMenuDelegate {
-  func menuNeedsUpdate(_ menu: NSMenu) {
+  func menuNeedsUpdate(_: NSMenu) {
     refreshPermissions()
     let missing = missingPermissions.count
     permissionsItem.title = missing == 0 ? "Permissions…" : "Permissions… (\(missing) missing)"
-    for item in menu.items {
-      for sub in item.submenu?.items ?? [] {
-        guard let raw = sub.representedObject as? String else { continue }
-        sub.state =
-          (raw == settings.hotkey.rawValue || raw == settings.locale.identifier) ? .on : .off
-      }
-    }
   }
 }
