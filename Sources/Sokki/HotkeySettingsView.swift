@@ -13,10 +13,10 @@ struct HotkeySettingsView: View {
             get: { store.config.hotkey },
             set: { key in store.update { $0.hotkey = key } })
         ) {
-          ForEach(HotkeyKey.allCases, id: \.self) { Text($0.displayName) }
+          ForEach(Hotkey.presets, id: \.self) { Text($0.displayName) }
         }
       } footer: {
-        if store.config.hotkey == .fn {
+        if store.config.hotkey.keys.contains(.fn) {
           Text(
             "fn / Globe needs System Settings → Keyboard → \"Press 🌐 key\" set to "
               + "\"Do Nothing\" and works only with Apple keyboards.")
