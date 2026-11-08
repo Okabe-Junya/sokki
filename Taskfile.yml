@@ -44,7 +44,7 @@ tasks:
     desc: SwiftLint analyzer rules (type-aware; needs a clean verbose build log)
     cmds:
       - rm -rf .build-analyze
-      - swift build --scratch-path .build-analyze -v > .build-analyze.log 2>&1
+      - swift build --scratch-path .build-analyze -v > .build-analyze.log 2>&1 || { grep -E 'error:|warning:' .build-analyze.log; exit 1; }
       - swiftlint analyze --strict --quiet --compiler-log-path .build-analyze.log
       - rm -rf .build-analyze .build-analyze.log
 

@@ -82,10 +82,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   }
 
   private func configChanged(from previous: Config, to current: Config) {
-    logger.info(
-      "config: hotkey \(current.hotkey.rawValue, privacy: .public), "
-        + "locale \(current.locale, privacy: .public), launchAtLogin \(current.launchAtLogin)"
-    )
+    let summary =
+      "hotkey \(current.hotkey.rawValue), locale \(current.locale), "
+      + "launchAtLogin \(current.launchAtLogin)"
+    logger.info("config: \(summary, privacy: .public)")
     guard let session else { return }
     if previous.hotkey != current.hotkey { startHotkey(session) }
     if previous.locale != current.locale { Task { await prepareEngine(session) } }
