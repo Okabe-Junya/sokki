@@ -66,8 +66,21 @@ struct PasteSessionTests {
     let postedAt = ContinuousClock.now
     _ = pasteboard.string(forType: .string)
 
-    await session.finish(postedAt: postedAt, receiptTimeout: .milliseconds(200))
+    let received = await session.waitForReceipt(postedAt: postedAt, timeout: .milliseconds(200))
+    await session.finish(afterReceipt: received)
 
+    #expect(received)
+    #expect(PasteboardSnapshotter.snapshot(pasteboard) == expected)
+  }
+
+  @Test func unreadPasteTimesOutAndStillRestores() async {
+    let expected = seed()
+    let session = PasteSession(text: "dictated", pasteboard: pasteboard)
+
+    let received = await session.waitForReceipt(postedAt: .now, timeout: .milliseconds(50))
+    await session.finish(afterReceipt: received)
+
+    #expect(!received)
     #expect(PasteboardSnapshotter.snapshot(pasteboard) == expected)
   }
 }
