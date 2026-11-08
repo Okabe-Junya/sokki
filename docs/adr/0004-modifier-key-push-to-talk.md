@@ -4,7 +4,7 @@ Date: 2026-11-08
 
 ## Status
 
-Accepted
+Superseded by ADR 12 on 2026-11-09: the hotkey becomes a recorded chord of modifier keys.
 
 ## Context
 
