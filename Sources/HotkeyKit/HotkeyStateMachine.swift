@@ -38,9 +38,8 @@ struct HotkeyStateMachine {
       interrupt()
       return nil
     case .keyDown(let keyCode):
-      let wasHeld = pressedAt != nil
       interrupt()
-      return wasHeld && keyCode == Self.escapeKeyCode ? .escape : nil
+      return keyCode == Self.escapeKeyCode ? .escape : nil
     case .keyUp:
       return nil
     }

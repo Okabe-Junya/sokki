@@ -158,10 +158,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     switch state {
     case .idle:
       symbol = "mic"
-      stateItem.title = "Idle — hold \(Self.title(for: settings.hotkey)) to dictate"
-    case .listening:
-      symbol = "mic.fill"
-      stateItem.title = "Listening…"
+      stateItem.title =
+        "Idle — hold \(Self.title(for: settings.hotkey)) to dictate, double-tap for hands-free"
+    case .listening(let locked):
+      symbol = locked ? "waveform" : "mic.fill"
+      stateItem.title =
+        locked
+        ? "Hands-free — tap \(Self.title(for: settings.hotkey)) to insert, Esc to discard"
+        : "Listening… (release to insert, Esc to discard)"
     case .finalizing:
       symbol = "ellipsis"
       stateItem.title = live.isEmpty ? "Finalizing…" : live
@@ -174,7 +178,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     statusItem?.button?.image = NSImage(
       systemSymbolName: symbol, accessibilityDescription: stateItem.title)
-    if state == .listening, !live.isEmpty {
+    if state.isListening, !live.isEmpty {
       liveItem.title = String(live.suffix(Self.liveTextMaxCharacters))
       liveItem.isHidden = false
     } else {

@@ -11,6 +11,8 @@ public enum HotkeyEvent: Sendable, Equatable {
   case cancelled
   /// Two short presses within `doubleTapWindow` with no other key between.
   case doubleTapped
-  /// Escape pressed while the key was held.
+  /// Escape went down. Reported whether or not the key is held, so a
+  /// hands-free session (no key held) can be discarded too; the session
+  /// ignores it while idle.
   case escape
 }

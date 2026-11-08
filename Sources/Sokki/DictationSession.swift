@@ -8,6 +8,9 @@ import os
 /// Owns the lifecycle of one utterance: hotkey event → recording →
 /// transcription → cleanup → insertion. Exactly one utterance is in flight at
 /// a time; events that do not fit the current state are ignored.
+///
+/// Gestures: hold to dictate (release inserts), double-tap to lock hands-free
+/// (the next tap inserts), Escape discards in either mode.
 actor DictationSession {
   private let engine: any SpeechEngine
   private let recorder: AudioRecorder
@@ -45,18 +48,22 @@ actor DictationSession {
   func handle(_ event: HotkeyEvent) async {
     switch event {
     case .pressed:
-      await startListening()
+      if state == .listening(locked: true) {
+        await finishAndInsert()
+      } else {
+        await startListening()
+      }
+    case .doubleTapped:
+      lock()
     case .cancelled, .escape:
       await cancel()
     case .released:
       await finishAndInsert()
-    case .doubleTapped:
-      break
     }
   }
 
   private func startListening() async {
-    guard state == .idle || isFailed(state) else { return }
+    guard state == .idle || state.isFailed else { return }
     guard let format = await engine.preferredAudioFormat() else {
       setState(.failed("speech engine not ready"))
       return
@@ -64,14 +71,14 @@ actor DictationSession {
     do {
       let frames = try await recorder.start(outputFormat: format)
       let updates = engine.transcribe(frames)
-      setState(.listening)
-      utterance = Task { [observer] in
+      setState(.listening(locked: false))
+      utterance = Task {
         var finalText = ""
         for try await update in updates {
           if update.isFinal {
             finalText = update.text
           } else {
-            observer(.listening, update.text)
+            publishLive(update.text)
           }
         }
         return finalText
@@ -81,8 +88,18 @@ actor DictationSession {
     }
   }
 
+  private func lock() {
+    guard state == .listening(locked: false) else { return }
+    setState(.listening(locked: true))
+  }
+
+  private func publishLive(_ text: String) {
+    guard state.isListening else { return }
+    observer(state, text)
+  }
+
   private func cancel() async {
-    guard state == .listening, let utterance else { return }
+    guard state.isListening, let utterance else { return }
     await recorder.stop()
     // Let the engine finalize and return to idle so the next utterance can start.
     _ = try? await utterance.value
@@ -91,13 +108,13 @@ actor DictationSession {
   }
 
   private func finishAndInsert() async {
-    guard state == .listening, let utterance else { return }
+    guard state.isListening, let utterance else { return }
     let released = ContinuousClock.now
     setState(.finalizing)
     await recorder.stop()
     defer {
       self.utterance = nil
-      if state != .idle, !isFailed(state) { setState(.idle) }
+      if state != .idle, !state.isFailed { setState(.idle) }
     }
     do {
       let text = Cleanup.apply(try await utterance.value)
@@ -121,12 +138,8 @@ actor DictationSession {
   }
 
   private func setState(_ new: SessionState) {
+    logger.debug("state \(String(describing: new))")
     state = new
     observer(new, "")
-  }
-
-  private func isFailed(_ state: SessionState) -> Bool {
-    if case .failed = state { return true }
-    return false
   }
 }
