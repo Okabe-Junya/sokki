@@ -18,24 +18,28 @@ actor DictationSession {
   private let inserter: TextInserter
   private let dictionary: DictionaryStore
   private let observer: @Sendable (SessionState, String) -> Void
+  private let reporter: @Sendable (UtteranceReport) -> Void
   private let logger = Logger(subsystem: "dev.junya.sokki", category: "session")
 
   private var state: SessionState = .idle
   private var utterance: Task<String, Error>?
   private var peakLevel: Float = 0
+  private var recordingStarted = ContinuousClock.now
 
   init(
     engine: any SpeechEngine,
     recorder: AudioRecorder,
     inserter: TextInserter,
     dictionary: DictionaryStore,
-    observer: @escaping @Sendable (SessionState, String) -> Void
+    observer: @escaping @Sendable (SessionState, String) -> Void,
+    reporter: @escaping @Sendable (UtteranceReport) -> Void
   ) {
     self.engine = engine
     self.recorder = recorder
     self.inserter = inserter
     self.dictionary = dictionary
     self.observer = observer
+    self.reporter = reporter
   }
 
   private static func milliseconds(
@@ -79,6 +83,7 @@ actor DictationSession {
     }
     do {
       let frames = try await recorder.start(outputFormat: format)
+      recordingStarted = .now
       let updates = engine.transcribe(metered(frames))
       setState(.listening(locked: false))
       utterance = Task {
@@ -124,45 +129,68 @@ actor DictationSession {
 
   private func cancel() async {
     guard state.isListening, let utterance else { return }
+    let stopped = ContinuousClock.now
+    let handsFree = state == .listening(locked: true)
     await recorder.stop()
     // Let the engine finalize and return to idle so the next utterance can start.
     _ = try? await utterance.value
     self.utterance = nil
     setState(.idle)
+    reporter(
+      UtteranceReport(
+        outcome: .discarded,
+        handsFree: handsFree,
+        recordedMs: Self.milliseconds(from: recordingStarted, to: stopped),
+        peakLevel: peakLevel))
   }
 
   private func finishAndInsert() async {
     guard state.isListening, let utterance else { return }
     let released = ContinuousClock.now
+    var report = UtteranceReport(
+      outcome: .failed,
+      handsFree: state == .listening(locked: true),
+      recordedMs: Self.milliseconds(from: recordingStarted, to: released),
+      peakLevel: 0)
     setState(.finalizing)
     await recorder.stop()
     defer {
       self.utterance = nil
       if state != .idle, !state.isFailed { setState(.idle) }
+      report.peakLevel = peakLevel
+      reporter(report)
     }
     do {
       let raw = try await utterance.value
       let text = TextCleanup.apply(raw, dictionary: await dictionary.current())
       let finalAfter = Self.milliseconds(from: released, to: ContinuousClock.now)
+      report.finalMs = finalAfter
+      report.rawCharacters = raw.count
+      report.characters = text.count
       guard peakLevel > 0 else {
         logger.error("no audio captured, final after \(finalAfter) ms")
+        report.outcome = .noAudio
         setState(.failed("No audio captured: check the Microphone permission and input device"))
         return
       }
       guard !text.isEmpty else {
         logger.info("empty utterance, final after \(finalAfter) ms")
+        report.outcome = .empty
         setState(.idle)
         return
       }
       setState(.inserting)
       let outcome = try await inserter.insert(text)
       let insertAfter = Self.milliseconds(from: released, to: ContinuousClock.now)
+      report.insertMs = insertAfter
+      report.outcome = outcome == .pasted ? .inserted : .blockedBySecureInput
       logger.info(
         "final +\(finalAfter) ms, inserted +\(insertAfter) ms, \(text.count) chars, \(String(describing: outcome))"
       )
       setState(.idle)
     } catch {
       logger.error("utterance failed: \(error)")
+      report.error = "\(error)"
       setState(.failed("\(error)"))
     }
   }

@@ -1,3 +1,4 @@
+import ActivityLog
 import AppKit
 import AudioCapture
 import Cleanup
@@ -14,6 +15,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private let logger = Logger(subsystem: "dev.junya.sokki", category: "app")
   private let config = ConfigStore(directory: ConfigDirectory.url)
   private let dictionary = DictionaryStore(file: ConfigDirectory.dictionaryFile)
+  private let activityLog = ActivityLog(file: ActivityEntry.file)
   private let permissionsWindow = PermissionsWindowController()
   private var settingsWindow: SettingsWindowController?
   private var statusItem: NSStatusItem?
@@ -43,10 +45,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       engine: AppleSpeechEngine(),
       recorder: AudioRecorder(),
       inserter: TextInserter(),
-      dictionary: dictionary
-    ) { [weak self] state, live in
-      Task { @MainActor in self?.render(state, live: live) }
-    }
+      dictionary: dictionary,
+      observer: { [weak self] state, live in
+        Task { @MainActor in self?.render(state, live: live) }
+      },
+      reporter: { [weak self] report in
+        Task { @MainActor in self?.record(report) }
+      })
     session = dictation
     config.onChange = { [weak self] previous, current in
       self?.configChanged(from: previous, to: current)
@@ -91,6 +96,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     if previous.locale != current.locale { Task { await prepareEngine(session) } }
     if previous.launchAtLogin != current.launchAtLogin { applyLoginItem(current.launchAtLogin) }
     if lastState == .idle { render(.idle, live: "") }
+  }
+
+  private func record(_ report: UtteranceReport) {
+    let entry = ActivityEntry(
+      hotkey: config.config.hotkey, locale: config.config.locale, utterance: report)
+    Task { [activityLog, logger] in
+      do {
+        try await activityLog.append(entry)
+      } catch {
+        logger.error("activity log: \(error)")
+      }
+    }
   }
 
   private func applyLoginItem(_ enabled: Bool) {

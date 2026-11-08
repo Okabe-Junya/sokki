@@ -89,6 +89,26 @@ Each key is the text you want; the value lists what the recognizer produces:
 The longest match wins, Latin forms match regardless of case, and an edit
 applies to the next utterance. `XDG_CONFIG_HOME` is honoured.
 
+## Activity log
+
+Each utterance appends one JSON line to `~/Library/Logs/Sokki/activity.jsonl`
+with its outcome, timings, character counts, input level, and the hotkey and
+locale it ran under. The transcript itself is never written. Use it to see how
+settings behave over time:
+
+```sh
+# median time from release to insertion, per locale
+jq -s 'map(select(.utterance.outcome == "inserted"))
+  | group_by(.locale)
+  | map({locale: .[0].locale, n: length,
+         medianInsertMs: (map(.utterance.insertMs) | sort | .[length / 2 | floor])})' \
+  ~/Library/Logs/Sokki/activity.jsonl
+```
+
+The log keeps two files of about 1 MB each: when `activity.jsonl` fills up it
+becomes `activity.1.jsonl` and the older one is deleted. Delete either file at
+any time.
+
 ## Signing
 
 `task app` signs ad-hoc by default, which is fine for a quick try but macOS
@@ -132,6 +152,7 @@ are listed in `.swiftlint.yml`.
 | `Transcription` | `SpeechEngine` protocol and the Apple `SpeechAnalyzer` implementation |
 | `TextInsertion` | Clipboard paste with promise-based read receipt and clipboard restore |
 | `Cleanup` | Deterministic transcript cleanup (whitespace, fillers, self-corrections) and the JSON personal dictionary |
+| `ActivityLog` | Size-bounded JSON Lines file with one rotated generation |
 | `Sokki` | Menu bar app and the per-utterance `DictationSession` |
 
 ## Design decisions

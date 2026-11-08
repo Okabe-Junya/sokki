@@ -22,7 +22,8 @@ area/cleanup:
 
 area/app:
   - changed-files:
-      - any-glob-to-any-file: ["Sources/Sokki/**", "Package.swift"]
+      - any-glob-to-any-file:
+          ["Sources/Sokki/**", "Sources/ActivityLog/**", "Tests/ActivityLogTests/**", "Package.swift"]
 
 area/github-management:
   - changed-files:
