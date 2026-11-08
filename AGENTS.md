@@ -22,6 +22,6 @@ Working agreement for AI agents in this repository.
   surface; a changed decision gets a new superseding record.
 - Releases: every PR gets type, `area/*`, and `bump:*` labels automatically
   (branch type `feature` → `bump:minor`, other types → `bump:patch`, a `!:`
-  title or BREAKING CHANGE body → `bump:major`); swap the `bump:*` label
+  title or a `BREAKING CHANGE: ` footer line → `bump:major`); swap the `bump:*` label
   before merging to override. Publishing the drafted release builds, signs,
   and uploads the zip; never push tags by hand.

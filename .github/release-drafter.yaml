@@ -40,7 +40,7 @@ change-title-escapes: '\<*_&'
 autolabeler:
   - label: "bump:major"
     title: ['/^\w+(\(.+\))?!:/']
-    body: ["/BREAKING CHANGE/"]
+    body: ["/^BREAKING[- ]CHANGE: /m"]
   - label: "bump:minor"
     branch: ['/\/feature\//']
     title: ['/^feat(\(.+\))?:/']
