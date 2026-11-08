@@ -26,6 +26,9 @@ jobs:
         with:
           persist-credentials: false
 
+      # The Swift image has no curl, which mise-action needs to download mise.
+      - run: apt-get update -q && apt-get install -y -q --no-install-recommends curl ca-certificates
+
       - uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
         with:
           version: 2026.11.4
