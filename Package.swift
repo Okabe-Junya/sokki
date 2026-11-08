@@ -14,6 +14,7 @@ let package = Package(
     .target(name: "AudioCapture"),
     .target(name: "Transcription", dependencies: ["AudioCapture"]),
     .target(name: "TextInsertion"),
+    .target(name: "Cleanup"),
     .executableTarget(
       name: "Sokki",
       dependencies: ["HotkeyKit", "AudioCapture", "Transcription", "TextInsertion"]
@@ -26,5 +27,6 @@ let package = Package(
       resources: [.copy("Fixtures")]
     ),
     .testTarget(name: "TextInsertionTests", dependencies: ["TextInsertion"]),
+    .testTarget(name: "CleanupTests", dependencies: ["Cleanup"]),
   ]
 )

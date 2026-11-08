@@ -28,6 +28,7 @@ disabled_rules:
   - vertical_whitespace_between_cases
   - sorted_imports # swift-format's OrderedImports sorts case-sensitively (AVFoundation before AudioCapture)
   - pattern_matching_keywords # swift-format's UseLetInEveryBoundCaseVariable requires the opposite
+  - extension_access_modifier # swift-format's NoAccessLevelOnExtensionDeclaration moves the modifier back onto members
   # Against Swift API Design Guidelines or the Google / Airbnb style guides.
   - explicit_type_interface # inference is idiomatic; annotate only where it aids reading
   - explicit_acl # `internal` is the default and both style guides omit it
