@@ -14,11 +14,11 @@ struct ActivityEntry: Encodable, Sendable {
 
   let time: Date
   let version: String
-  let hotkey: HotkeyKey
+  let hotkey: Hotkey
   let locale: String
   let utterance: UtteranceReport
 
-  init(hotkey: HotkeyKey, locale: String, utterance: UtteranceReport) {
+  init(hotkey: Hotkey, locale: String, utterance: UtteranceReport) {
     time = Date()
     version = Self.version
     self.hotkey = hotkey

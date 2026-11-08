@@ -2,7 +2,7 @@ import CoreGraphics
 import Foundation
 import os
 
-/// Listens for one push-to-talk key with a listen-only `CGEventTap` and emits
+/// Listens for one push-to-talk chord with a listen-only `CGEventTap` and emits
 /// `HotkeyEvent`s.
 ///
 /// Contract:
@@ -23,7 +23,7 @@ public final class HotkeyMonitor: @unchecked Sendable {
   @usableFromInline static let defaultMinimumHoldMilliseconds = 300
   @usableFromInline static let defaultDoubleTapWindowMilliseconds = 300
 
-  public let key: HotkeyKey
+  public let hotkey: Hotkey
   public let minimumHold: Duration
   public let doubleTapWindow: Duration
 
@@ -33,18 +33,18 @@ public final class HotkeyMonitor: @unchecked Sendable {
   private let state: OSAllocatedUnfairLock<State>
 
   public init(
-    key: HotkeyKey,
+    hotkey: Hotkey,
     minimumHold: Duration = .milliseconds(HotkeyMonitor.defaultMinimumHoldMilliseconds),
     doubleTapWindow: Duration = .milliseconds(HotkeyMonitor.defaultDoubleTapWindowMilliseconds)
   ) {
-    self.key = key
+    self.hotkey = hotkey
     self.minimumHold = minimumHold
     self.doubleTapWindow = doubleTapWindow
     (events, continuation) = AsyncStream.makeStream(bufferingPolicy: .unbounded)
     state = OSAllocatedUnfairLock(
       uncheckedState: State(
         machine: HotkeyStateMachine(
-          key: key, minimumHold: minimumHold, doubleTapWindow: doubleTapWindow)
+          hotkey: hotkey, minimumHold: minimumHold, doubleTapWindow: doubleTapWindow)
       ))
   }
 
@@ -106,7 +106,7 @@ public final class HotkeyMonitor: @unchecked Sendable {
       state.source = nil
       state.runLoop = nil
       state.machine = HotkeyStateMachine(
-        key: key, minimumHold: minimumHold, doubleTapWindow: doubleTapWindow)
+        hotkey: hotkey, minimumHold: minimumHold, doubleTapWindow: doubleTapWindow)
     }
     continuation.finish()
   }

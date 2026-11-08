@@ -88,7 +88,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
   private func configChanged(from previous: Config, to current: Config) {
     let summary =
-      "hotkey \(current.hotkey.rawValue), locale \(current.locale), "
+      "hotkey \(current.hotkey.name), locale \(current.locale), "
       + "launchAtLogin \(current.launchAtLogin)"
     logger.info("config: \(summary, privacy: .public)")
     guard let session else { return }
@@ -134,7 +134,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private func startHotkey(_ session: DictationSession) {
     hotkeyTask?.cancel()
     hotkey?.stop()
-    let monitor = HotkeyMonitor(key: config.config.hotkey)
+    let monitor = HotkeyMonitor(hotkey: config.config.hotkey)
     do {
       try monitor.start()
     } catch HotkeyError.inputMonitoringDenied {
