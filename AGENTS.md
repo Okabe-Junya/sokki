@@ -7,8 +7,8 @@ Working agreement for AI agents in this repository.
 - Swift 6 language mode with complete strict concurrency. Fix data-race
   diagnostics properly instead of silencing them.
 - Keep the module boundaries in `Package.swift`: `HotkeyKit`, `AudioCapture`,
-  `Transcription`, `TextInsertion` know nothing about each other; only the
-  `Sokki` target wires them together.
+  `Transcription`, `TextInsertion`, `Cleanup` know nothing about each other;
+  only the `Sokki` target wires them together.
 - One `SpeechTranscriber` is bound to one `SpeechAnalyzer` for its whole
   lifetime. Never attach a transcriber to a second analyzer (runtime trap).
 - Verify with `task check` and `task app`; run the `.app`, not the bare
