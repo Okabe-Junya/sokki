@@ -1,4 +1,5 @@
 import AudioCapture
+import Cleanup
 import Foundation
 import HotkeyKit
 import TextInsertion
@@ -15,6 +16,7 @@ actor DictationSession {
   private let engine: any SpeechEngine
   private let recorder: AudioRecorder
   private let inserter: TextInserter
+  private let dictionary: DictionaryStore
   private let observer: @Sendable (SessionState, String) -> Void
   private let logger = Logger(subsystem: "dev.junya.sokki", category: "session")
 
@@ -26,11 +28,13 @@ actor DictationSession {
     engine: any SpeechEngine,
     recorder: AudioRecorder,
     inserter: TextInserter,
+    dictionary: DictionaryStore,
     observer: @escaping @Sendable (SessionState, String) -> Void
   ) {
     self.engine = engine
     self.recorder = recorder
     self.inserter = inserter
+    self.dictionary = dictionary
     self.observer = observer
   }
 
@@ -137,7 +141,8 @@ actor DictationSession {
       if state != .idle, !state.isFailed { setState(.idle) }
     }
     do {
-      let text = Cleanup.apply(try await utterance.value)
+      let raw = try await utterance.value
+      let text = TextCleanup.apply(raw, dictionary: await dictionary.current())
       let finalAfter = Self.milliseconds(from: released, to: ContinuousClock.now)
       guard peakLevel > 0 else {
         logger.error("no audio captured, final after \(finalAfter) ms")

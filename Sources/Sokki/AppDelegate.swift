@@ -1,5 +1,6 @@
 import AppKit
 import AudioCapture
+import Cleanup
 import HotkeyKit
 import TextInsertion
 import Transcription
@@ -13,6 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private let settings = Settings()
   private let logger = Logger(subsystem: "dev.junya.sokki", category: "app")
   private let permissionsWindow = PermissionsWindowController()
+  private let dictionary = DictionaryStore(file: ConfigDirectory.dictionaryFile)
   private var statusItem: NSStatusItem?
   private var stateItem = NSMenuItem()
   private var liveItem = NSMenuItem()
@@ -42,7 +44,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let dictation = DictationSession(
       engine: AppleSpeechEngine(),
       recorder: AudioRecorder(),
-      inserter: TextInserter()
+      inserter: TextInserter(),
+      dictionary: dictionary
     ) { [weak self] state, live in
       Task { @MainActor in self?.render(state, live: live) }
     }
@@ -153,6 +156,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let localeRoot = NSMenuItem(title: "Language", action: nil, keyEquivalent: "")
     localeRoot.submenu = localeMenu
     menu.addItem(localeRoot)
+    let dictionaryItem = NSMenuItem(
+      title: "Open Dictionary…", action: #selector(openDictionary), keyEquivalent: "")
+    dictionaryItem.target = self
+    menu.addItem(dictionaryItem)
     menu.addItem(.separator())
 
     permissionsItem = NSMenuItem(
@@ -224,6 +231,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
   @objc private func showPermissions() {
     permissionsWindow.show()
+  }
+
+  @objc private func openDictionary() {
+    do {
+      try dictionary.ensureExists()
+      NSWorkspace.shared.open(ConfigDirectory.dictionaryFile)
+    } catch {
+      logger.error("dictionary file: \(error)")
+      render(.failed("dictionary file: \(error)"), live: "")
+    }
   }
 }
 

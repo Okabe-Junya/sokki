@@ -17,7 +17,7 @@ let package = Package(
     .target(name: "Cleanup"),
     .executableTarget(
       name: "Sokki",
-      dependencies: ["HotkeyKit", "AudioCapture", "Transcription", "TextInsertion"]
+      dependencies: ["HotkeyKit", "AudioCapture", "Transcription", "TextInsertion", "Cleanup"]
     ),
     .testTarget(name: "HotkeyKitTests", dependencies: ["HotkeyKit"]),
     .testTarget(name: "AudioCaptureTests", dependencies: ["AudioCapture"]),

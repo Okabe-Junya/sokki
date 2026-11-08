@@ -46,6 +46,23 @@ shorter than 300 ms is ignored. fn / Globe is available in the menu; it needs
 System Settings → Keyboard → "Press 🌐 key" set to "Do Nothing", and works
 only with Apple keyboards.
 
+## Personal dictionary
+
+Words the recognizer keeps getting wrong go in
+`~/.config/sokki/dictionary.json` ("Open Dictionary…" in the menu creates it).
+Each key is the text you want; the value lists what the recognizer produces:
+
+```json
+{
+  "GitHub": ["ギットハブ"],
+  "Kubernetes": ["クバネティス", "くばねてぃす"],
+  "PR": ["プルリク", "プルリクエスト"]
+}
+```
+
+The longest match wins, Latin forms match regardless of case, and an edit
+applies to the next utterance. `XDG_CONFIG_HOME` is honoured.
+
 ## Signing
 
 `task app` signs ad-hoc by default, which is fine for a quick try but macOS
