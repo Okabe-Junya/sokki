@@ -20,6 +20,8 @@ workflows:
         - 'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
         - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
         - 'jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b'
+    '.github/workflows/verify-lockfile.yaml':
+        - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
 dependencies:
     'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9':
         ref: 'v6.1.0'
