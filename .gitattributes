@@ -1,0 +1,17 @@
+# Normalize line endings: store text as LF in the repository.
+* text=auto eol=lf
+
+# Scripts must stay LF regardless of platform (CRLF breaks execution).
+*.sh text eol=lf
+
+# Generated lockfiles: collapse diffs in review and exclude from language stats.
+mise.lock linguist-generated=true
+
+# docs/ is prose, not code: keep it out of the repository language breakdown.
+docs/** linguist-documentation
+
+# Binary assets: never normalize EOL or attempt text diffs.
+*.aiff binary
+*.wav  binary
+*.png  binary
+*.icns binary
