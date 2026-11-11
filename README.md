@@ -19,10 +19,8 @@ no third-party dependencies.
 1. Download `Sokki-vX.Y.Z.zip` from
    [Releases](https://github.com/Okabe-Junya/sokki/releases), unzip it, and
    move `Sokki.app` to `/Applications`.
-2. Open it. The app is not notarized, so macOS blocks the first launch. Go to
-   System Settings → Privacy & Security and click "Open Anyway" (the button
-   stays for about an hour after the blocked attempt), or run
-   `xattr -d com.apple.quarantine /Applications/Sokki.app` and open it again.
+2. Open it. Releases are signed with a Developer ID and notarized by Apple, so
+   macOS opens them without a security prompt.
 3. Grant the three permissions it asks for (see the table below).
 
 ## Usage

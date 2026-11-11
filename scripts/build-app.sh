@@ -28,7 +28,15 @@ mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp "$bin_dir/Sokki" "$app/Contents/MacOS/Sokki"
 sed -e "s/__VERSION__/${version#v}/" -e "s/__BUILD__/$build/" "$root/scripts/Info.plist" > "$app/Contents/Info.plist"
 
-codesign --force --sign "$identity" --identifier dev.junya.sokki "$app"
+# The hardened runtime is required for notarization; signing every build with it keeps
+# local builds behaving like releases. Only Apple-issued certificates get a secure
+# timestamp, which notarization also requires.
+case $identity in
+  "Developer ID Application"*) timestamp=--timestamp ;;
+  *) timestamp=--timestamp=none ;;
+esac
+codesign --force --sign "$identity" --identifier dev.junya.sokki \
+  --options runtime "$timestamp" --entitlements "$root/scripts/Sokki.entitlements" "$app"
 
 if [ "$identity" = "-" ]; then
   echo "warning: ad-hoc signed; privacy permissions will reset on the next build" >&2

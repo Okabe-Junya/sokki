@@ -9,7 +9,7 @@ tasks:
       - task --list
 
   app:
-    desc: Build build/Sokki.app (IDENTITY="Sokki Development" for a stable signature)
+    desc: Build build/Sokki.app (IDENTITY="..." for a stable signature; see docs/development.md)
     cmds:
       - sh scripts/build-app.sh "{{.IDENTITY}}"
 
