@@ -183,7 +183,7 @@ actor DictationSession {
       let outcome = try await inserter.insert(text)
       let insertAfter = Self.milliseconds(from: released, to: ContinuousClock.now)
       report.insertMs = insertAfter
-      report.outcome = outcome == .pasted ? .inserted : .blockedBySecureInput
+      report.outcome = UtteranceReport.Outcome(outcome)
       logger.info(
         "final +\(finalAfter) ms, inserted +\(insertAfter) ms, \(text.count) chars, \(String(describing: outcome))"
       )

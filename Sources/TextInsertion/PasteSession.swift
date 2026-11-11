@@ -34,23 +34,28 @@ final class PasteSession {
     return true
   }
 
-  func finish(
+  /// Whether an app read the text before the timeout.
+  func waitForReceipt(
     postedAt: ContinuousClock.Instant,
-    receiptTimeout: Duration = .milliseconds(receiptTimeoutMilliseconds)
-  )
-    async
-  {
-    let deadline = postedAt + receiptTimeout
+    timeout: Duration = .milliseconds(receiptTimeoutMilliseconds)
+  ) async -> Bool {
+    let deadline = postedAt + timeout
     while provider.receivedAt == nil, ContinuousClock.now < deadline {
       try? await Task.sleep(for: .milliseconds(Self.receiptPollIntervalMilliseconds))
     }
-    if let receivedAt = provider.receivedAt {
-      let receiptMilliseconds = (receivedAt - postedAt) / .milliseconds(1)
-      Self.logger.debug("receipt after \(receiptMilliseconds, format: .fixed(precision: 1)) ms")
-      try? await Task.sleep(for: .milliseconds(Self.trailingReadGraceMilliseconds))
-    } else {
+    guard let receivedAt = provider.receivedAt else {
       Self.logger.debug(
-        "no receipt within \(receiptTimeout / .milliseconds(1), format: .fixed(precision: 0)) ms")
+        "no receipt within \(timeout / .milliseconds(1), format: .fixed(precision: 0)) ms")
+      return false
+    }
+    let receiptMilliseconds = (receivedAt - postedAt) / .milliseconds(1)
+    Self.logger.debug("receipt after \(receiptMilliseconds, format: .fixed(precision: 1)) ms")
+    return true
+  }
+
+  func finish(afterReceipt received: Bool) async {
+    if received {
+      try? await Task.sleep(for: .milliseconds(Self.trailingReadGraceMilliseconds))
     }
     let restored = restoreIfUnchanged()
     Self.logger.debug("clipboard \(restored ? "restored" : "left alone: changed by someone else")")
