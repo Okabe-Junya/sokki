@@ -8,9 +8,9 @@ struct HotkeyStateMachineTests {
     var machine: HotkeyStateMachine
     var events: [HotkeyEvent] = []
 
-    init(_ key: HotkeyKey) {
+    init(_ hotkey: Hotkey) {
       machine = HotkeyStateMachine(
-        key: key, minimumHold: .milliseconds(300), doubleTapWindow: .milliseconds(300))
+        hotkey: hotkey, minimumHold: .milliseconds(300), doubleTapWindow: .milliseconds(300))
     }
 
     mutating func send(_ input: HotkeyInput, atMs milliseconds: Int) {
@@ -26,21 +26,21 @@ struct HotkeyStateMachineTests {
   }
 
   @Test func shortTapIsCancelled() {
-    var driver = Driver(.rightOption)
+    var driver = Driver(Hotkey(.rightOption))
     driver.rightOption(down: true, atMs: 0)
     driver.rightOption(down: false, atMs: 100)
     #expect(driver.events == [.pressed, .cancelled])
   }
 
   @Test func holdIsReleasedWithDuration() {
-    var driver = Driver(.rightOption)
+    var driver = Driver(Hotkey(.rightOption))
     driver.rightOption(down: true, atMs: 1_000)
     driver.rightOption(down: false, atMs: 1_400)
     #expect(driver.events == [.pressed, .released(heldFor: .milliseconds(400))])
   }
 
   @Test func twoShortTapsWithinWindowAreDoubleTap() {
-    var driver = Driver(.rightOption)
+    var driver = Driver(Hotkey(.rightOption))
     driver.rightOption(down: true, atMs: 0)
     driver.rightOption(down: false, atMs: 80)
     driver.rightOption(down: true, atMs: 160)
@@ -49,7 +49,7 @@ struct HotkeyStateMachineTests {
   }
 
   @Test func twoShortTapsOutsideWindowAreTwoCancels() {
-    var driver = Driver(.rightOption)
+    var driver = Driver(Hotkey(.rightOption))
     driver.rightOption(down: true, atMs: 0)
     driver.rightOption(down: false, atMs: 80)
     driver.rightOption(down: true, atMs: 500)
@@ -58,7 +58,7 @@ struct HotkeyStateMachineTests {
   }
 
   @Test func interveningKeyBreaksDoubleTap() {
-    var driver = Driver(.rightOption)
+    var driver = Driver(Hotkey(.rightOption))
     driver.rightOption(down: true, atMs: 0)
     driver.rightOption(down: false, atMs: 80)
     driver.send(.keyDown(keyCode: 0x00), atMs: 120)
@@ -69,7 +69,7 @@ struct HotkeyStateMachineTests {
   }
 
   @Test func escapeIsReportedHeldOrNot() {
-    var driver = Driver(.rightOption)
+    var driver = Driver(Hotkey(.rightOption))
     driver.send(.keyDown(keyCode: 0x35), atMs: 0)
     driver.rightOption(down: true, atMs: 100)
     driver.send(.keyDown(keyCode: 0x35), atMs: 300)
@@ -78,7 +78,7 @@ struct HotkeyStateMachineTests {
   }
 
   @Test func escapeDoesNotBreakDoubleTapAfterwards() {
-    var driver = Driver(.rightOption)
+    var driver = Driver(Hotkey(.rightOption))
     driver.send(.keyDown(keyCode: 0x35), atMs: 0)
     driver.rightOption(down: true, atMs: 500)
     driver.rightOption(down: false, atMs: 580)
@@ -88,7 +88,7 @@ struct HotkeyStateMachineTests {
   }
 
   @Test func fnWorksFromFlagsChangedAlone() {
-    var driver = Driver(.fn)
+    var driver = Driver(Hotkey(.fn))
     driver.send(.flagsChanged(keyCode: 0x3F, flags: .maskSecondaryFn), atMs: 0)
     driver.send(.flagsChanged(keyCode: 0x3F, flags: []), atMs: 350)
     driver.send(.flagsChanged(keyCode: 0x3F, flags: .maskSecondaryFn), atMs: 1_000)
@@ -103,10 +103,10 @@ struct HotkeyStateMachineTests {
   }
 
   @Test func rightOptionReleaseIsSeenWhileLeftOptionHeld() {
-    var driver = Driver(.rightOption)
+    var driver = Driver(Hotkey(.rightOption))
     driver.rightOption(down: true, atMs: 0)
     driver.send(
-      .flagsChanged(keyCode: 0x3A, flags: [.maskAlternate, CGEventFlags(rawValue: 0x60)]), atMs: 100
+      .flagsChanged(keyCode: 0x3A, flags: [.maskAlternate, CGEventFlags(rawValue: 0x60)]), atMs: 350
     )
     driver.send(
       .flagsChanged(keyCode: 0x3D, flags: [.maskAlternate, CGEventFlags(rawValue: 0x20)]), atMs: 400
@@ -115,10 +115,79 @@ struct HotkeyStateMachineTests {
   }
 
   @Test func otherModifierKeyCodeIsIgnored() {
-    var driver = Driver(.rightOption)
+    var driver = Driver(Hotkey(.rightOption))
     driver.send(
       .flagsChanged(keyCode: 0x3A, flags: [.maskAlternate, CGEventFlags(rawValue: 0x20)]), atMs: 0)
     driver.send(.flagsChanged(keyCode: 0x3A, flags: []), atMs: 400)
     #expect(driver.events.isEmpty)
+  }
+
+  @Test func chordPressesOnceEveryKeyIsDown() throws {
+    var driver = Driver(try #require(Hotkey(keys: [.leftControl, .leftOption])))
+    driver.send(
+      .flagsChanged(keyCode: 0x3B, flags: [.maskControl, CGEventFlags(rawValue: 0x01)]), atMs: 0)
+    driver.send(
+      .flagsChanged(
+        keyCode: 0x3A, flags: [.maskControl, .maskAlternate, CGEventFlags(rawValue: 0x21)]),
+      atMs: 50)
+    driver.send(
+      .flagsChanged(keyCode: 0x3A, flags: [.maskControl, CGEventFlags(rawValue: 0x01)]), atMs: 450)
+    driver.send(.flagsChanged(keyCode: 0x3B, flags: []), atMs: 500)
+    #expect(driver.events == [.pressed, .released(heldFor: .milliseconds(400))])
+  }
+
+  @Test func extraModifierHeldFirstBlocksThePress() {
+    var driver = Driver(Hotkey(.leftOption))
+    driver.send(
+      .flagsChanged(keyCode: 0x38, flags: [.maskShift, CGEventFlags(rawValue: 0x02)]), atMs: 0)
+    driver.send(
+      .flagsChanged(
+        keyCode: 0x3A, flags: [.maskShift, .maskAlternate, CGEventFlags(rawValue: 0x22)]),
+      atMs: 50)
+    driver.send(
+      .flagsChanged(keyCode: 0x3A, flags: [.maskShift, CGEventFlags(rawValue: 0x02)]), atMs: 500)
+    #expect(driver.events.isEmpty)
+  }
+
+  @Test func ordinaryKeyEarlyInThePressCancelsIt() {
+    var driver = Driver(Hotkey(.rightOption))
+    driver.rightOption(down: true, atMs: 0)
+    driver.send(.keyDown(keyCode: 0x00), atMs: 100)
+    driver.send(.keyUp(keyCode: 0x00), atMs: 150)
+    driver.rightOption(down: false, atMs: 600)
+    driver.rightOption(down: true, atMs: 1_000)
+    driver.rightOption(down: false, atMs: 1_400)
+    #expect(
+      driver.events == [.pressed, .cancelled, .pressed, .released(heldFor: .milliseconds(400))])
+  }
+
+  @Test func ordinaryKeyLateInThePressIsIgnored() {
+    var driver = Driver(Hotkey(.rightOption))
+    driver.rightOption(down: true, atMs: 0)
+    driver.send(.keyDown(keyCode: 0x00), atMs: 350)
+    driver.rightOption(down: false, atMs: 600)
+    #expect(driver.events == [.pressed, .released(heldFor: .milliseconds(600))])
+  }
+
+  @Test func extraModifierEarlyInThePressCancelsIt() {
+    var driver = Driver(Hotkey(.rightOption))
+    driver.rightOption(down: true, atMs: 0)
+    driver.send(
+      .flagsChanged(
+        keyCode: 0x37, flags: [.maskAlternate, .maskCommand, CGEventFlags(rawValue: 0x48)]),
+      atMs: 100)
+    driver.rightOption(down: false, atMs: 600)
+    #expect(driver.events == [.pressed, .cancelled])
+  }
+
+  @Test func capsLockAndFnFlagsDoNotBlockThePress() {
+    var driver = Driver(Hotkey(.rightOption))
+    driver.send(
+      .flagsChanged(
+        keyCode: 0x3D,
+        flags: [.maskAlternate, .maskAlphaShift, .maskSecondaryFn, CGEventFlags(rawValue: 0x40)]),
+      atMs: 0)
+    driver.send(.flagsChanged(keyCode: 0x3D, flags: [.maskAlphaShift]), atMs: 400)
+    #expect(driver.events == [.pressed, .released(heldFor: .milliseconds(400))])
   }
 }

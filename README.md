@@ -38,7 +38,10 @@ of which can also be opened from the menu:
 
 The default hotkey is the right Option key. Hold it to dictate; a press
 shorter than 300 ms is ignored. Double-tap it to keep listening hands-free
-until the next tap; Escape discards. fn / Globe is available in Settings; it needs
+until the next tap; Escape discards. Pressing another key within the first 300 ms
+cancels the press, so shortcuts that use the same modifiers still work.
+The hotkey can be any combination of modifier keys (see `hotkey` below).
+fn / Globe needs
 System Settings → Keyboard → "Press 🌐 key" set to "Do Nothing", and works
 only with Apple keyboards.
 
@@ -59,7 +62,7 @@ default, so the file only needs what differs:
 
 | key | values | default |
 |---|---|---|
-| `hotkey` | `rightOption`, `leftOption`, `rightCommand`, `fn` | `rightOption` |
+| `hotkey` | one key name, or names held together joined by `+` (`"leftControl+leftOption"`): `leftControl`, `rightControl`, `leftOption`, `rightOption`, `leftShift`, `rightShift`, `leftCommand`, `rightCommand`, `fn` | `rightOption` |
 | `locale` | `ja-JP`, `en-US` | `ja-JP` |
 | `launchAtLogin` | `true`, `false` | `false` |
 

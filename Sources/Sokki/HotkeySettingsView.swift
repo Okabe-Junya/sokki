@@ -12,7 +12,7 @@ struct HotkeySettingsView: View {
           get: { store.config.hotkey },
           set: { key in store.update { $0.hotkey = key } })
       ) {
-        ForEach(HotkeyKey.allCases, id: \.self) { Text($0.displayName) }
+        ForEach(Hotkey.presets, id: \.self) { Text($0.displayName) }
       }
       Section("Gestures") {
         LabeledContent("Hold, speak, release", value: "Inserts the text")
