@@ -31,12 +31,18 @@ task identity                        # self-signed "Sokki Development" in your l
 task app IDENTITY="Sokki Development"
 ```
 
-An Apple Development certificate from Xcode (any Apple Account, no paid
-program) works the same way; `security find-identity -v -p codesigning` lists
-what is available.
+An Apple Development or Developer ID certificate works the same way;
+`security find-identity -v -p codesigning` lists what is available. Every build
+uses the hardened runtime with `scripts/Sokki.entitlements`, as releases do.
 
-To let GitHub Releases sign with the same identity, run
-`sh scripts/export-identity.sh` and follow the commands it prints.
+Releases are signed with the maintainer's Developer ID Application certificate
+and notarized in CI. To install a new or renewed certificate, create the
+request with `openssl req -new -newkey rsa:2048 -nodes -keyout key.pem -out
+request.csr`, upload `request.csr` under Certificates in the Apple Developer
+account, then run `sh scripts/pack-identity.sh key.pem
+developerID_application.cer` and follow the commands it prints. Notarization
+reads an App Store Connect API key from the `APPLE_API_KEY_P8`,
+`APPLE_API_KEY_ID`, and `APPLE_API_ISSUER_ID` secrets.
 
 ## Checks
 

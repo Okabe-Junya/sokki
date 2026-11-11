@@ -37,12 +37,12 @@ jobs:
           INPUT_TAG: ${{ inputs.tag }}
 
       - name: Import signing identity
-        run: sh .github/scripts/import-identity.sh "Sokki Development"
+        run: sh .github/scripts/import-identity.sh "Developer ID Application"
         env:
           SOKKI_SIGNING_P12_BASE64: ${{ secrets.SOKKI_SIGNING_P12_BASE64 }}
           SOKKI_SIGNING_P12_PASSWORD: ${{ secrets.SOKKI_SIGNING_P12_PASSWORD }}
 
-      - run: sh scripts/build-app.sh "Sokki Development"
+      - run: sh scripts/build-app.sh "Developer ID Application"
         env:
           VERSION: ${{ steps.draft.outputs.tag }}
 
@@ -51,9 +51,11 @@ jobs:
       - name: Notarize
         run: sh .github/scripts/notarize.sh build/Sokki.app
         env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+
+      - run: spctl --assess --type execute --verbose build/Sokki.app
 
       - run: ditto -c -k --keepParent build/Sokki.app "Sokki-$TAG.zip"
         env:

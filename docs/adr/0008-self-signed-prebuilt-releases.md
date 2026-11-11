@@ -4,7 +4,7 @@ Date: 2026-11-08
 
 ## Status
 
-Accepted
+Superseded by ADR 14 on 2026-11-11: releases are signed with a Developer ID and notarized.
 
 ## Context
 
