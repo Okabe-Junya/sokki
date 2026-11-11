@@ -82,8 +82,6 @@ autolabeler:
   - label: chore
     branch: ['/\/chore\//']
     title: ['/^chore(\(.+\))?:/']
-  - label: dependencies
-    branch: ['/^renovate\//']
 
 template: |
   ## What's Changed
