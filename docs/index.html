@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sokki — push-to-talk dictation for macOS</title>
+<meta name="description" content="Hold a key, speak, release. Sokki types what you said into any app, using speech recognition that runs entirely on your Mac.">
+<link rel="icon" type="image/png" href="icon-Default.png">
+<style>
+  :root {
+    color-scheme: light dark;
+    --paper: #f4efe4;
+    --ink: #1d1b19;
+    --muted: #6b655c;
+    --rule: #d9d2c3;
+    --seal: #c9391f;
+    --on-seal: #fffaf2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #1d1b19;
+      --ink: #f4efe4;
+      --muted: #a39c90;
+      --rule: #3a3632;
+      --seal: #e2553a;
+      --on-seal: #1d1b19;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 48px 16px;
+    background: var(--paper);
+    color: var(--ink);
+    font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { width: 100%; max-width: 520px; text-align: center; }
+  .icon { width: 128px; height: 128px; }
+  h1 {
+    margin: 20px 0 0;
+    font-size: 44px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  .kana { margin: 6px 0 0; color: var(--muted); font-size: 14px; letter-spacing: 0.3em; }
+  .lead { margin: 24px 0 0; font-size: 20px; line-height: 1.5; text-wrap: balance; }
+  .download {
+    display: inline-block;
+    margin-top: 32px;
+    padding: 14px 28px;
+    border-radius: 999px;
+    background: var(--seal);
+    color: var(--on-seal);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .download:hover { filter: brightness(1.08); }
+  .download:focus-visible, a:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  .requires { margin: 12px 0 0; color: var(--muted); font-size: 14px; }
+  ul {
+    margin: 40px 0 0;
+    padding: 24px 0 0;
+    border-top: 1px solid var(--rule);
+    list-style: none;
+    text-align: left;
+  }
+  li { padding: 6px 0 6px 22px; position: relative; }
+  li::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 0.95em;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--seal);
+  }
+  footer { margin-top: 40px; color: var(--muted); font-size: 14px; }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+<main>
+  <picture>
+    <source srcset="icon-Dark.png" media="(prefers-color-scheme: dark)">
+    <img class="icon" src="icon-Default.png" width="128" height="128" alt="">
+  </picture>
+  <h1>Sokki</h1>
+  <p class="kana" lang="ja">速記</p>
+  <p class="lead">Push-to-talk dictation for macOS that never leaves your Mac.</p>
+  <a class="download" href="https://github.com/Okabe-Junya/sokki/releases/latest">Download for macOS</a>
+  <p class="requires">macOS 26 or later on Apple Silicon. Free and open source.</p>
+  <ul>
+    <li>Hold a modifier key, speak, release. The text appears at the cursor in whatever app is in front.</li>
+    <li>Recognition runs on Apple's on-device speech models. Nothing is sent to a server.</li>
+    <li>Japanese and English, with a personal dictionary for the words it gets wrong.</li>
+  </ul>
+  <footer>
+    <a href="https://github.com/Okabe-Junya/sokki#readme">Documentation</a> ·
+    <a href="https://github.com/Okabe-Junya/sokki">Source</a>
+  </footer>
+</main>
+</body>
+</html>

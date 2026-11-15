@@ -24,6 +24,20 @@ The app icon is the Icon Composer document `scripts/AppIcon.icon`, which
 `task app` compiles with `actool`. Open it in Icon Composer (bundled with
 Xcode) to edit it or to preview its light, dark, and tinted appearances.
 
+## Website
+
+`docs/index.html` is the landing page that GitHub Pages serves from `docs/`.
+Its two icon images are exports of `scripts/AppIcon.icon`; after changing the
+icon, export them again:
+
+```sh
+ictool="/Applications/Xcode.app/Contents/Applications/Icon Composer.app/Contents/Executables/ictool"
+for rendition in Default Dark; do
+  "$ictool" scripts/AppIcon.icon --export-image --output-file "docs/icon-$rendition.png" \
+    --platform macOS --rendition "$rendition" --width 256 --height 256 --scale 2
+done
+```
+
 ## Signing
 
 `task app` signs ad-hoc by default, which is fine for a quick try but macOS
