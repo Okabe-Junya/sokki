@@ -20,6 +20,10 @@ task run
 Run the `.app`, not the bare binary, when a change touches permissions or the
 hotkey: macOS grants permissions to the app bundle.
 
+The app icon is the Icon Composer document `scripts/AppIcon.icon`, which
+`task app` compiles with `actool`. Open it in Icon Composer (bundled with
+Xcode) to edit it or to preview its light, dark, and tinted appearances.
+
 ## Signing
 
 `task app` signs ad-hoc by default, which is fine for a quick try but macOS

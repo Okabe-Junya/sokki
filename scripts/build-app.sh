@@ -28,6 +28,24 @@ mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp "$bin_dir/Sokki" "$app/Contents/MacOS/Sokki"
 sed -e "s/__VERSION__/${version#v}/" -e "s/__BUILD__/$build/" "$root/scripts/Info.plist" > "$app/Contents/Info.plist"
 
+# The Icon Composer document becomes Assets.car, which holds the light, dark, and tinted
+# icons, plus an AppIcon.icns for tools that do not read asset catalogs.
+# actool exits 0 even when it compiles nothing, so the outputs are checked instead. It skips
+# app icons unless a partial Info.plist is requested; scripts/Info.plist already has those keys.
+icon_plist="$root/build/icon-info.plist"
+icon_log=$(xcrun actool "$root/scripts/AppIcon.icon" --compile "$app/Contents/Resources" \
+  --app-icon AppIcon --platform macosx --target-device mac --minimum-deployment-target 26.0 \
+  --output-partial-info-plist "$icon_plist" \
+  --output-format human-readable-text --errors --warnings 2>&1) || true
+rm -f "$icon_plist"
+for icon in Assets.car AppIcon.icns; do
+  if [ ! -f "$app/Contents/Resources/$icon" ]; then
+    echo "error: actool did not produce $icon" >&2
+    echo "$icon_log" >&2
+    exit 1
+  fi
+done
+
 # The hardened runtime is required for notarization; signing every build with it keeps
 # local builds behaving like releases. Only Apple-issued certificates get a secure
 # timestamp, which notarization also requires.
