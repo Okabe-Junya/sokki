@@ -31,4 +31,4 @@ area/github-management:
 
 area/docs:
   - changed-files:
-      - any-glob-to-any-file: ["README.md", "AGENTS.md", "docs/**"]
+      - any-glob-to-any-file: ["README.md", "AGENTS.md", "docs/**", ".agents/**", ".claude/**"]

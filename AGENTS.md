@@ -21,6 +21,8 @@ Working agreement for AI agents in this repository.
   per file). Read the relevant record before changing the speech engine,
   hotkey model, insertion method, settings location, signing, automation
   surface, or activity log; a changed decision gets a new superseding record.
+  Before marking such a PR ready, review it against the ADRs with the
+  `adr-review` skill (`.agents/skills/adr-review/`).
 - Releases: every PR gets type, `area/*`, and `bump:*` labels automatically
   (branch type `feature` → `bump:minor`, other types → `bump:patch`, a `!:`
   title or a `BREAKING CHANGE: ` footer line → `bump:major`); swap the `bump:*` label
