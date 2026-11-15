@@ -22,6 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private var stateItem = NSMenuItem()
   private var liveItem = NSMenuItem()
   private var permissionsItem = NSMenuItem()
+  private let recent = RecentTranscripts()
   private var session: DictationSession?
   private var hotkey: HotkeyMonitor?
   private var hotkeyTask: Task<Void, Never>?
@@ -51,8 +52,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       },
       reporter: { [weak self] report in
         Task { @MainActor in self?.record(report) }
+      },
+      transcriptHandler: { [weak self] text, outcome in
+        Task { @MainActor in self?.received(text, outcome: outcome) }
       })
     session = dictation
+    recent.onCopy = { [weak self] in self?.rerenderIfIdle() }
     config.onChange = { [weak self] previous, current in
       self?.configChanged(from: previous, to: current)
     }
@@ -108,6 +113,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         logger.error("activity log: \(error)")
       }
     }
+  }
+
+  private func received(_ text: String, outcome: InsertionOutcome) {
+    recent.add(text, outcome: outcome)
+    rerenderIfIdle()
+  }
+
+  private func rerenderIfIdle() {
+    if lastState == .idle { render(.idle, live: "") }
   }
 
   private func applyLoginItem(_ enabled: Bool) {
@@ -177,7 +191,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     liveItem.isHidden = true
     menu.addItem(stateItem)
     menu.addItem(liveItem)
+    menu.addItem(recent.copyLastItem)
     menu.addItem(.separator())
+    menu.addItem(recent.submenuItem)
 
     let settingsItem = NSMenuItem(
       title: "Settings…", action: #selector(showSettings), keyEquivalent: ",")
@@ -212,10 +228,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     case .idle where config.problem != nil:
       symbol = "exclamationmark.triangle"
       stateItem.title = "config.json could not be read — see Settings…"
+    case .idle where recent.notice != nil:
+      symbol = "doc.on.clipboard"
+      stateItem.title = recent.notice ?? ""
     case .idle:
       symbol = "mic"
       stateItem.title = "Idle — hold \(hotkeyName) to dictate, double-tap for hands-free"
     case .listening(let locked):
+      recent.clearNotice()
       symbol = locked ? "waveform" : "mic.fill"
       stateItem.title =
         locked
@@ -241,7 +261,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       liveItem.isHidden = true
     }
   }
+}
 
+// MARK: Menu actions
+
+extension AppDelegate {
   @objc private func showSettings() {
     settingsWindow?.show()
   }
