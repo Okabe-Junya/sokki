@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/icon-Dark.png">
+    <img src="docs/icon-Default.png" width="128" height="128" alt="">
+  </picture>
+</p>
+
 # Sokki
 
 Push-to-talk dictation for macOS that never leaves your Mac.
