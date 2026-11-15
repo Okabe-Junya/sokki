@@ -47,18 +47,23 @@ public actor TextInserter {
   }
 
   /// Pastes `text` at the caret, waiting for any earlier insert's clipboard restore first.
+  /// Returns once the target has read the text, or after the receipt timeout.
   public func insert(_ text: String) async throws -> InsertionOutcome {
     let previous = tail
     let paste = Task { () async throws -> PasteResult in
       await previous?.value
       return try await Self.paste(text)
     }
+    let receipt = Task { () async -> Bool in
+      guard case .pasted(let session, let postedAt)? = try? await paste.value else { return false }
+      return await session.waitForReceipt(postedAt: postedAt)
+    }
     tail = Task {
-      guard case .pasted(let session, let postedAt)? = try? await paste.value else { return }
-      await session.finish(postedAt: postedAt)
+      guard case .pasted(let session, _)? = try? await paste.value else { return }
+      await session.finish(afterReceipt: await receipt.value)
     }
     switch try await paste.value {
-    case .pasted: return .pasted
+    case .pasted: return await receipt.value ? .pasted : .unread
     case .blocked: return .blockedBySecureInput
     }
   }
