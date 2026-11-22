@@ -87,7 +87,5 @@ are listed in `.swiftlint.yml`.
 
 ## Design decisions
 
-The choices that are hard to reverse (speech engine, hotkey model, insertion
-method, settings location, signing and distribution, automation surface,
-activity log) are
-recorded in [adr](adr), one short record per decision.
+The choices that are hard to reverse are recorded in [adr](adr), one short
+record per decision; the file names list the topics.

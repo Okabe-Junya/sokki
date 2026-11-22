@@ -19,7 +19,7 @@ jobs:
     # macOS runner pool (5 concurrent jobs) to the builds.
     runs-on: ubuntu-26.04-arm
     timeout-minutes: 10
-    # swift-format ships with the toolchain; 6.3 matches the Swift in Xcode 26.6 on macos-26.
+    # swift-format ships with the Swift toolchain, so the image provides it.
     container: swift:6.4.2-noble@sha256:23d9b28ad97fb1cf1999edc3a0cb265ee915ed42299a9344e7173d5a6d2b05f4
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
