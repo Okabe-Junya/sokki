@@ -90,6 +90,6 @@ template: |
 
   ## Install
 
-  Download `Sokki-v$RESOLVED_VERSION.zip` below, unzip it, move Sokki.app to /Applications, and follow the first-launch steps in the README.
+  Download `Sokki.dmg` below, open it, drag Sokki to Applications, and follow the first-launch steps in the README.
 
   **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION

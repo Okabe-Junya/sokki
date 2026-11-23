@@ -57,15 +57,22 @@ jobs:
 
       - run: spctl --assess --type execute --verbose build/Sokki.app
 
-      - run: ditto -c -k --keepParent build/Sokki.app "Sokki-$TAG.zip"
-        env:
-          TAG: ${{ steps.draft.outputs.tag }}
+      # The image keeps one name across releases so that
+      # releases/latest/download/Sokki.dmg always points at the newest one.
+      - run: sh scripts/make-dmg.sh build/Sokki.app Sokki.dmg "Developer ID Application"
 
-      - run: shasum -a 256 "Sokki-$TAG.zip" > "Sokki-$TAG.zip.sha256"
+      - name: Notarize the disk image
+        run: sh .github/scripts/notarize.sh Sokki.dmg
         env:
-          TAG: ${{ steps.draft.outputs.tag }}
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
 
-      - run: gh release upload "$TAG" "Sokki-$TAG.zip" "Sokki-$TAG.zip.sha256" --clobber
+      - run: spctl --assess --type open --context context:primary-signature --verbose Sokki.dmg
+
+      - run: shasum -a 256 Sokki.dmg > Sokki.dmg.sha256
+
+      - run: gh release upload "$TAG" Sokki.dmg Sokki.dmg.sha256 --clobber
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.draft.outputs.tag }}
