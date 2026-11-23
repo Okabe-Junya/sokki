@@ -82,6 +82,14 @@
       "addLabels": [
         "renovate/pin"
       ]
+    },
+    {
+      "matchUpdateTypes": [
+        "lockFileMaintenance"
+      ],
+      "addLabels": [
+        "renovate/lock-file-maintenance"
+      ]
     }
   ],
   "customManagers": [
