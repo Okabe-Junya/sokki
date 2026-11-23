@@ -23,9 +23,9 @@ no third-party dependencies.
 
 ## Install
 
-1. Download `Sokki-vX.Y.Z.zip` from
-   [Releases](https://github.com/Okabe-Junya/sokki/releases), unzip it, and
-   move `Sokki.app` to `/Applications`.
+1. Download `Sokki.dmg` from
+   [Releases](https://github.com/Okabe-Junya/sokki/releases), open it, and
+   drag Sokki to Applications.
 2. Open it. Releases are signed with a Developer ID and notarized by Apple, so
    macOS opens them without a security prompt.
 3. Grant the three permissions it asks for (see the table below).
