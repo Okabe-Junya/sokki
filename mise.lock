@@ -6,6 +6,7 @@ lockfile_version = 4
 version = "0.65.1"
 backend = "aqua:realm/SwiftLint"
 specifiers = ["0.65.1"]
+unsupported_platforms = ["windows-x64"]
 
 [tools.swiftlint."platforms.linux-arm64"]
 checksum = "sha256:9ffa52f478e6d8eb485d37d14715ffac90abc81c58f3370d598bf75be05605f8"
